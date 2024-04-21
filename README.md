@@ -43,7 +43,7 @@ RNASeq data
 **(RNA Seq V2 RSEM UQ Log2)**, gene annotation and sample phenotype information.
 
 Phosproproteomics data
-- Likewise, the bioinformatics workflow begins with the processed phosphoproteomics intensities (normalized log2 abundance ratios)
+- Likewise, the bioinformatics workflow begins with the processed phosphoproteomics intensities (normalized log2 abundance ratios).
 
 - Further methodological details on the complete analysis are included in the accompanied.qmd files & Materials & Methods section of the manuscript.
 
@@ -66,7 +66,7 @@ Further details on each of the utilized databases/tools/repositories based on th
 packages = c(
     "edgeR",
     "circlize",
-    "ComplexHeatmap"
+    "ComplexHeatmap",
     "tidyverse",
     "data.table",
     "progeny",
@@ -77,7 +77,7 @@ packages = c(
     "OmnipathR",
     "limma",
     "PhosR",
-    "AnnotationDbi"
+    "AnnotationDbi",
     "org.Hs.eg.db",
     "ggplot2",
     "forcats",
