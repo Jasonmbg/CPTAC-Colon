@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Efstathios-Iason Vlachavas">
+<meta name="dcterms.date" content="2024-04-18">
+
+<title>CPTAC phosphoproteome analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="CPTAC_PHOSP_files/libs/clipboard/clipboard.min.js"></script>
+<script src="CPTAC_PHOSP_files/libs/quarto-html/quarto.js"></script>
+<script src="CPTAC_PHOSP_files/libs/quarto-html/popper.min.js"></script>
+<script src="CPTAC_PHOSP_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="CPTAC_PHOSP_files/libs/quarto-html/anchor.min.js"></script>
+<link href="CPTAC_PHOSP_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="CPTAC_PHOSP_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="CPTAC_PHOSP_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="CPTAC_PHOSP_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="CPTAC_PHOSP_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#cptac-colon-dataset-phosphoproteome-analysis-overview" id="toc-cptac-colon-dataset-phosphoproteome-analysis-overview" class="nav-link active" data-scroll-target="#cptac-colon-dataset-phosphoproteome-analysis-overview"><span class="header-section-number">1</span> CPTAC-Colon dataset phosphoproteome analysis overview</a>
+  <ul class="collapse">
+  <li><a href="#document-the-analysis-of-the-phosphoproteomics-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript." id="toc-document-the-analysis-of-the-phosphoproteomics-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript." class="nav-link" data-scroll-target="#document-the-analysis-of-the-phosphoproteomics-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript."><span class="header-section-number">1.0.1</span> Document the analysis of the phosphoproteomics data from the CPTAC-Colon dataset for the ACCC-CRC manuscript.</a></li>
+  <li><a href="#then-continue-with-creating-the-ppi-network-by-omnipath-and-infer-relative-kinase-activities-by-implementing-also-statistical-methods-from-the-decoupler-r-package." id="toc-then-continue-with-creating-the-ppi-network-by-omnipath-and-infer-relative-kinase-activities-by-implementing-also-statistical-methods-from-the-decoupler-r-package." class="nav-link" data-scroll-target="#then-continue-with-creating-the-ppi-network-by-omnipath-and-infer-relative-kinase-activities-by-implementing-also-statistical-methods-from-the-decoupler-r-package."><span class="header-section-number">1.0.2</span> Then continue with creating the PPI network by Omnipath and infer relative kinase activities, by implementing also statistical methods from the decoupleR R package.</a></li>
+  <li><a href="#set-up-an-additional-customized-approach-for-preparing-the-input-for-ssgsea-analysis-using-the-processed-phosphodata-from-above" id="toc-set-up-an-additional-customized-approach-for-preparing-the-input-for-ssgsea-analysis-using-the-processed-phosphodata-from-above" class="nav-link" data-scroll-target="#set-up-an-additional-customized-approach-for-preparing-the-input-for-ssgsea-analysis-using-the-processed-phosphodata-from-above"><span class="header-section-number">1.0.3</span> Set-up an additional customized approach for preparing the input for ssGSEA analysis using the processed phosphodata from above</a></li>
+  <li><a href="#also-highlight-an-alternative-implementation-for-pathway-activity-inference-using-the-following-framework-ptm-sea---decoupler" id="toc-also-highlight-an-alternative-implementation-for-pathway-activity-inference-using-the-following-framework-ptm-sea---decoupler" class="nav-link" data-scroll-target="#also-highlight-an-alternative-implementation-for-pathway-activity-inference-using-the-following-framework-ptm-sea---decoupler"><span class="header-section-number">1.0.4</span> Also highlight an alternative implementation for pathway activity inference using the following framework: PTM-SEA -&gt; decoupleR</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">CPTAC phosphoproteome analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Efstathios-Iason Vlachavas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2024-04-18</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="cptac-colon-dataset-phosphoproteome-analysis-overview" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> CPTAC-Colon dataset phosphoproteome analysis overview</h1>
+<section id="document-the-analysis-of-the-phosphoproteomics-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript." class="level3" data-number="1.0.1">
+<h3 data-number="1.0.1" class="anchored" data-anchor-id="document-the-analysis-of-the-phosphoproteomics-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript."><span class="header-section-number">1.0.1</span> Document the analysis of the phosphoproteomics data from the CPTAC-Colon dataset for the ACCC-CRC manuscript.</h3>
+<p>Similarly proceed by initially loading the necessary R packages, along with importing the clinical information.</p>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(limma)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(OmnipathR)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(decoupleR)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(clusterProfiler)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DOSE)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(AnnotationDbi)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(org.Hs.eg.db)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dr_here</span>()</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>final.updated.clin.mut.dat <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"CPTAC_clinical_final_mod_INFO.tsv"</span>))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>tot.samples <span class="ot">&lt;-</span> final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">Sample ID</span><span class="st">`</span> <span class="co"># 79</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"data_phosphoprotein_quantification.rda"</span>))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>dat.phospho <span class="ot">&lt;-</span> dat.phospho <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(PHOSPHOSITE,GENE_SYMBOL)) <span class="sc">%&gt;%</span> <span class="co"># GENE_SYMBOL</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">distinct</span>(ENTITY_STABLE_ID,<span class="at">.keep_all=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">"ENTITY_STABLE_ID"</span>) <span class="sc">%&gt;%</span>  </span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(tot.samples)) </span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>dat.phospho.clean <span class="ot">&lt;-</span> dat.phospho[<span class="sc">!</span><span class="fu">rowSums</span>(<span class="fu">is.na</span>(dat.phospho)) <span class="sc">&gt;</span> <span class="dv">67</span>, ] <span class="co">#  ~85% of total 79 samples</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>cc <span class="ot">&lt;-</span> <span class="fu">rownames</span>(dat.phospho.clean)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>cc.rm <span class="ot">&lt;-</span> <span class="fu">str_remove_all</span>(cc, <span class="st">"[p]"</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(dat.phospho.clean) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(cc.rm)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>phospho.mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dat.phospho.clean)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>msi_char_vec <span class="ot">&lt;-</span> final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>msi_char_upd <span class="ot">&lt;-</span> <span class="fu">recode</span>(msi_char_vec, <span class="at">MSS =</span> <span class="st">"MSS"</span>, <span class="st">`</span><span class="at">MSI-H</span><span class="st">`</span><span class="ot">=</span><span class="st">"MSI"</span>, <span class="at">.default =</span> <span class="cn">NA_character_</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span> <span class="ot">&lt;-</span> msi_char_upd</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>msi_cond <span class="ot">&lt;-</span> <span class="fu">factor</span>(final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(msi_cond) <span class="co"># 14 MSI_H; 65 MSS</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>msi_cond
+MSI MSS 
+ 14  65 </code></pre>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> msi_cond) <span class="co"># here</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(design) <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"msi_cond"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(design))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lmFit</span>(phospho.mat,design)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>cm <span class="ot">&lt;-</span> <span class="fu">makeContrasts</span>(<span class="at">Comp1=</span> MSS<span class="sc">-</span>MSI, <span class="at">levels =</span> <span class="fu">colnames</span>(<span class="fu">coef</span>(fit)))</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">contrasts.fit</span>(fit, cm)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>fit3 <span class="ot">&lt;-</span> <span class="fu">eBayes</span>(fit2, <span class="at">trend=</span><span class="cn">TRUE</span>,<span class="at">robust =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>comp1_stat <span class="ot">&lt;-</span> limma<span class="sc">::</span><span class="fu">topTable</span>(fit3, <span class="at">coef=</span><span class="dv">1</span>, <span class="at">number=</span><span class="fu">nrow</span>(fit3), <span class="at">adjust.method=</span><span class="st">"fdr"</span>, <span class="at">sort.by=</span><span class="st">"none"</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(t) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">MSS_vs_MSI_t_stat=</span>t) <span class="sc">%&gt;%</span> <span class="fu">drop_na</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="then-continue-with-creating-the-ppi-network-by-omnipath-and-infer-relative-kinase-activities-by-implementing-also-statistical-methods-from-the-decoupler-r-package." class="level3" data-number="1.0.2">
+<h3 data-number="1.0.2" class="anchored" data-anchor-id="then-continue-with-creating-the-ppi-network-by-omnipath-and-infer-relative-kinase-activities-by-implementing-also-statistical-methods-from-the-decoupler-r-package."><span class="header-section-number">1.0.2</span> Then continue with creating the PPI network by Omnipath and infer relative kinase activities, by implementing also statistical methods from the decoupleR R package.</h3>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>omnipath_ptm <span class="ot">&lt;-</span> <span class="fu">get_signed_ptms</span>() <span class="co"># fetch signed enzyme-substrate interactions</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># As in all biological databases, the resources constituting OmniPath contain putatively "wrong/biased" records, some of them more, others less. Here we see all these likely erroneous records are mainly retrieved from only one resource called ProtMapper. ProtMapper uses literature mining algorithms (REACH, Sparser), which are known to produce a number of false positives in their output.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># On this premise, we should consider removing the only ProtMapper *likely erroneous database records-false positive* interactions from the fetched data frame;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Which actually meant: remove if only present in ProtMapper, or keep if identified in at least one additional resource (i.e. if it is from ProtMapper, but also another resource confirms, then we keep the record).</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>omnipath_ptm <span class="ot">&lt;-</span> omnipath_ptm <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">'ProtMapper'</span>, sources) <span class="sc">|</span> n_resources <span class="sc">&gt;</span> <span class="dv">1</span>) </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>omnipath_ptm <span class="ot">&lt;-</span> omnipath_ptm[omnipath_ptm<span class="sc">$</span>modification <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"dephosphorylation"</span>,<span class="st">"phosphorylation"</span>),]</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>KSN <span class="ot">&lt;-</span> omnipath_ptm[,<span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">3</span>)]</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>KSN<span class="sc">$</span>substrate_genesymbol <span class="ot">&lt;-</span> <span class="fu">paste</span>(KSN<span class="sc">$</span>substrate_genesymbol,omnipath_ptm<span class="sc">$</span>residue_type, <span class="at">sep =</span><span class="st">"_"</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>KSN<span class="sc">$</span>substrate_genesymbol <span class="ot">&lt;-</span> <span class="fu">paste</span>(KSN<span class="sc">$</span>substrate_genesymbol,omnipath_ptm<span class="sc">$</span>residue_offset, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>KSN<span class="sc">$</span>mor <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(omnipath_ptm<span class="sc">$</span>modification <span class="sc">==</span> <span class="st">"phosphorylation"</span>, <span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>KSN<span class="sc">$</span>likelihood <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># we remove ambiguous modes of regulations</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>KSN<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="fu">paste</span>(KSN<span class="sc">$</span>substrate_genesymbol,KSN<span class="sc">$</span>enzyme_genesymbol,<span class="at">sep =</span><span class="st">""</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>KSN <span class="ot">&lt;-</span> KSN[<span class="sc">!</span><span class="fu">duplicated</span>(KSN<span class="sc">$</span>id),]</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>KSN <span class="ot">&lt;-</span> KSN[,<span class="sc">-</span><span class="dv">5</span>]</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co"># rename KSN to fit decoupler format for downstream analysis</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(KSN)[<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"phospho_site"</span>,<span class="st">"kinase"</span>)</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co"># perform kinase activity enrichment analysis for the comparison of interest;</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co"># implement the function below to plot top differentially regulated kinases</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co"># https://github.com/saezlab/kinase_tf_mini_tuto/blob/main/code/utils.R</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>plot_top_features <span class="ot">&lt;-</span> <span class="cf">function</span>(data, n_top) {</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(data) <span class="ot">&lt;-</span> <span class="st">"value"</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>  arranged <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(value))</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  top_up <span class="ot">&lt;-</span> <span class="fu">slice_head</span>(arranged, <span class="at">n =</span> n_top)</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  top_down <span class="ot">&lt;-</span> <span class="fu">slice_tail</span>(arranged, <span class="at">n =</span> n_top)</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">list</span>(<span class="at">up =</span> top_up, <span class="at">down =</span> top_down), <span class="at">.id =</span> <span class="st">"status"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">id =</span> <span class="fu">fct_inorder</span>(id)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> id, <span class="at">fill =</span> status)) <span class="sc">+</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"up"</span> <span class="ot">=</span> <span class="st">"red"</span>, <span class="st">"down"</span> <span class="ot">=</span> <span class="st">"blue"</span>)) <span class="sc">+</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>()</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(p)</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>KSN_exp_1 <span class="ot">&lt;-</span> <span class="fu">intersect_regulons</span>(<span class="fu">as.matrix</span>(comp1_stat), KSN, <span class="at">.source =</span> kinase, <span class="at">.target =</span> phospho_site, <span class="at">minsize=</span><span class="dv">5</span>) <span class="co"># keep only the *present* kinases based on expressed targets;</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co"># User is strongly encouraged to check https://github.com/saezlab/decoupleR for more info on which are the available algorithms and how are employed.</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>kin_activity_1 <span class="ot">&lt;-</span> <span class="fu">run_wmean</span>(<span class="at">mat =</span> <span class="fu">as.matrix</span>(comp1_stat), <span class="at">.source =</span> <span class="st">"kinase"</span>, <span class="at">.target =</span> <span class="st">"phospho_site"</span>,<span class="at">network =</span> KSN_exp_1, <span class="at">times =</span> <span class="dv">1000</span>)</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>kin_act_MSS_vs_MSI_dat <span class="ot">&lt;-</span> kin_activity_1 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(statistic<span class="sc">==</span><span class="st">"norm_wmean"</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(statistic,source,score,p_value)</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="fu">write_tsv</span>(kin_act_MSS_vs_MSI_dat, <span class="at">file=</span><span class="st">"CPTAC.Colon.Kinact.MSS_vs_MSI.RES.TotalTable.tsv"</span>)</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>kin_activity_1 <span class="ot">&lt;-</span> kin_activity_1[kin_activity_1<span class="sc">$</span>statistic <span class="sc">==</span> <span class="st">"norm_wmean"</span>,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>)] <span class="sc">%&gt;%</span> <span class="fu">column_to_rownames</span>(<span class="at">var=</span><span class="st">"source"</span>)</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a><span class="co"># final visualization:</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_top_features</span>(kin_activity_1, <span class="at">n_top =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">'MSS vs MSI Kinase activity space'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_PHOSP_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="set-up-an-additional-customized-approach-for-preparing-the-input-for-ssgsea-analysis-using-the-processed-phosphodata-from-above" class="level3" data-number="1.0.3">
+<h3 data-number="1.0.3" class="anchored" data-anchor-id="set-up-an-additional-customized-approach-for-preparing-the-input-for-ssgsea-analysis-using-the-processed-phosphodata-from-above"><span class="header-section-number">1.0.3</span> Set-up an additional customized approach for preparing the input for ssGSEA analysis using the processed phosphodata from above</h3>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># proceed with the defined comp1_stat object from above; </span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>cptac_out_de_form <span class="ot">&lt;-</span> comp1_stat <span class="sc">%&gt;%</span> <span class="fu">rownames_to_column</span>(<span class="st">"Feature_ID"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">separate</span>(<span class="st">"Feature_ID"</span>, <span class="at">sep=</span><span class="st">"_"</span>, <span class="at">into=</span><span class="fu">c</span>(<span class="st">"GeneSymbol"</span>,<span class="st">"PhosID"</span>))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>xx <span class="ot">&lt;-</span> <span class="fu">unique</span>(cptac_out_de_form<span class="sc">$</span>GeneSymbol)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>uni.ids <span class="ot">&lt;-</span><span class="fu">mapIds</span>(org.Hs.eg.db, <span class="at">keys=</span>xx, <span class="at">column=</span><span class="st">"UNIPROT"</span>, <span class="at">keytype=</span><span class="st">"SYMBOL"</span>, <span class="at">multiVals=</span><span class="st">"first"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>uni.ids2 <span class="ot">&lt;-</span> uni.ids <span class="sc">%&gt;%</span> <span class="fu">enframe</span>(<span class="at">name=</span><span class="st">"Gene_Symbol"</span>,<span class="at">value=</span><span class="st">"Uniprot_ID"</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># from checking above, different gene symbols can map to the same UniprotID; on this purpose further remove them;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(uni.ids2<span class="sc">$</span>Gene_Symbol)) <span class="co"># 0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE 
+ 4881 </code></pre>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(uni.ids2<span class="sc">$</span>Uniprot_ID)) <span class="co"># 115</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE  TRUE 
+ 4766   115 </code></pre>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>uni.ids3 <span class="ot">&lt;-</span> uni.ids2[<span class="sc">!</span><span class="fu">duplicated</span>(uni.ids2<span class="sc">$</span>Uniprot_ID),]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>uni.ids4 <span class="ot">&lt;-</span> uni.ids3[<span class="sc">!</span><span class="fu">is.na</span>(uni.ids3<span class="sc">$</span>Uniprot_ID),]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># merge the two DFs to have the uniprotIDs along with the phosphositeIDs</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>merged.de.dat <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(cptac_out_de_form, uni.ids4, <span class="at">by=</span><span class="fu">c</span>(<span class="st">"GeneSymbol"</span><span class="ot">=</span><span class="st">"Gene_Symbol"</span>))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># final formatting of our input file measurements</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>merged.de.dat.format <span class="ot">&lt;-</span> merged.de.dat <span class="sc">%&gt;%</span> <span class="fu">unite</span>(<span class="st">"Final.Feature"</span>, <span class="fu">c</span>(<span class="st">"Uniprot_ID"</span>,<span class="st">"PhosID"</span>), <span class="at">sep=</span><span class="st">";"</span>,<span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(Final.Feature, MSS_vs_MSI_t_stat) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">distinct</span>(Final.Feature,<span class="at">.keep_all=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">Final.Feature=</span><span class="fu">str_c</span>(Final.Feature, <span class="st">"p"</span>, <span class="at">sep=</span><span class="st">"-"</span>))  </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(merged.de.dat.format, file="CPTAC_Colon_Format_UC_Input_PTMSEA_Tstat_MSSvsMSI.tsv")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="after-running-ssgsea-independently-load-the-selected-pathways-of-interest-and-visualize-them." class="level4" data-number="1.0.3.1">
+<h4 data-number="1.0.3.1" class="anchored" data-anchor-id="after-running-ssgsea-independently-load-the-selected-pathways-of-interest-and-visualize-them."><span class="header-section-number">1.0.3.1</span> After running ssGSEA independently, load the selected pathways of interest and visualize them.</h4>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>out_paths <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"PTMSEA_CPTAC_Colon_MSSvsMSI_NES_Mod.tsv"</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>sel_paths <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"PATH-NP_B_CELL_RECEPTOR_PATHWAY"</span>,<span class="st">"PATH-BI_ISCHEMIA"</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>              <span class="st">"PATH-NP_CCR7_PATHWAY"</span>,<span class="st">"PATH-NP_IL11_PATHWAY"</span>,<span class="st">"PATH-NP_IL33_PATHWAY"</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>              <span class="st">"PATH-NP_TGF_BETA_PATHWAY"</span>,<span class="st">"PATH-NP_TNF_ALPHA_PATHWAY"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>              <span class="st">"PATH-WP_Ras_signaling"</span>,<span class="st">"PATH-NP_T_CELL_RECEPTOR_PATHWAY"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">"PATH-WP_PI3K-Akt_signaling_pathway"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>sel_paths_2 <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"CPTAC_MSS_vs_MSI_PTM_SEA_Paths.txt"</span>))</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>sel_paths_IDs <span class="ot">&lt;-</span> sel_paths_2 <span class="sc">%&gt;%</span> <span class="fu">pull</span>(PTMSEA_ID)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>out_paths_mod <span class="ot">&lt;-</span> out_paths <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(PTMSEA_ID<span class="sc">%in%</span>sel_paths_IDs) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">PTM_SEA_Paths=</span>PTMSEA_ID) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">Status =</span> <span class="fu">ifelse</span>(NES_value <span class="sc">&gt;=</span> <span class="dv">0</span>, <span class="st">"Up"</span>, <span class="st">"Down"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(NES_value)))</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(out_paths_mod, </span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="fu">aes</span>(NES_value, <span class="fu">fct_reorder</span>(PTM_SEA_Paths, NES_value),</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="at">fill =</span> Status)) <span class="sc">+</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Down"</span> <span class="ot">=</span> <span class="st">"blue"</span>, <span class="st">"Up"</span> <span class="ot">=</span> <span class="st">"red"</span>)) <span class="sc">+</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_dose</span>(<span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="fu">xlab</span>(<span class="st">"Normalized Enrichment Score"</span>) <span class="sc">+</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="fu">ggtitle</span>(<span class="st">"PTMSEA_Pathways (MSS vs MSI)"</span>)    </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_PHOSP_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="864"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="also-highlight-an-alternative-implementation-for-pathway-activity-inference-using-the-following-framework-ptm-sea---decoupler" class="level3" data-number="1.0.4">
+<h3 data-number="1.0.4" class="anchored" data-anchor-id="also-highlight-an-alternative-implementation-for-pathway-activity-inference-using-the-following-framework-ptm-sea---decoupler"><span class="header-section-number">1.0.4</span> Also highlight an alternative implementation for pathway activity inference using the following framework: PTM-SEA -&gt; decoupleR</h3>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># this we will use downstream for pathway activity</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>comp1_stat_cptac_ptm <span class="ot">&lt;-</span> limma<span class="sc">::</span><span class="fu">topTable</span>(fit3, <span class="at">coef=</span><span class="dv">1</span>, <span class="at">number=</span><span class="fu">nrow</span>(fit3), <span class="at">adjust.method=</span><span class="st">"fdr"</span>, <span class="at">sort.by=</span><span class="st">"none"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(t) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">MSI_HvsMSS_t_stat=</span>t) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(<span class="st">"rowname"</span>, <span class="at">sep=</span><span class="st">"_"</span>, <span class="at">into=</span><span class="fu">c</span>(<span class="st">"GeneSymbol"</span>,<span class="st">"PhosID"</span>))</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>xx <span class="ot">&lt;-</span> <span class="fu">unique</span>(comp1_stat_cptac_ptm<span class="sc">$</span>GeneSymbol) <span class="co"># the gene symbols of interest</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># query the matching uniprotIDs</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>uni.ids <span class="ot">&lt;-</span><span class="fu">mapIds</span>(org.Hs.eg.db, <span class="at">keys=</span>xx, <span class="at">column=</span><span class="st">"UNIPROT"</span>, <span class="at">keytype=</span><span class="st">"SYMBOL"</span>, <span class="at">multiVals=</span><span class="st">"first"</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>uni.ids2 <span class="ot">&lt;-</span> uni.ids <span class="sc">%&gt;%</span> <span class="fu">enframe</span>(<span class="at">name=</span><span class="st">"Gene_Symbol"</span>,<span class="at">value=</span><span class="st">"Uniprot_ID"</span>) <span class="co"># Attention !!</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co"># from checking above, different gene symbols can map to the same UniprotID; on this purpose further remove them;</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(uni.ids2<span class="sc">$</span>Gene_Symbol)) <span class="co"># 0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE 
+ 4881 </code></pre>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(uni.ids2<span class="sc">$</span>Uniprot_ID)) <span class="co"># 115</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE  TRUE 
+ 4766   115 </code></pre>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>uni.ids3 <span class="ot">&lt;-</span> uni.ids2[<span class="sc">!</span><span class="fu">duplicated</span>(uni.ids2<span class="sc">$</span>Uniprot_ID),]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>uni.ids4 <span class="ot">&lt;-</span> uni.ids3[<span class="sc">!</span><span class="fu">is.na</span>(uni.ids3<span class="sc">$</span>Uniprot_ID),]</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># merge the two DFs to have the uniprotIDs along with the phosphositeIDs</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>merged.de.dat <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(comp1_stat_cptac_ptm, uni.ids4, <span class="at">by=</span><span class="fu">c</span>(<span class="st">"GeneSymbol"</span><span class="ot">=</span><span class="st">"Gene_Symbol"</span>)) <span class="co"># 20725</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># final formating of our input file measurements</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>merged.de.dat.format <span class="ot">&lt;-</span> merged.de.dat <span class="sc">%&gt;%</span> <span class="fu">unite</span>(<span class="st">"Final.Feature"</span>, <span class="fu">c</span>(<span class="st">"Uniprot_ID"</span>,<span class="st">"PhosID"</span>), <span class="at">sep=</span><span class="st">";"</span>,<span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">select</span>(Final.Feature, MSI_HvsMSS_t_stat) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">distinct</span>(Final.Feature,<span class="at">.keep_all=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> <span class="fu">column_to_rownames</span>(<span class="st">"Final.Feature"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># continue with the respective PTMSigDB database gmt file:</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># download from here: https://proteomics.broadapps.org/ptmsigdb/ (version: v1.9.1)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>dt.gmt <span class="ot">&lt;-</span> <span class="fu">read.gmt</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"ptm.sig.db.all.uniprot.human.v1.9.1.gmt"</span>))</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Break gene into compartments; also subset term into specific terms;</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>sel.terms<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">str_detect</span>(dt.gmt<span class="sc">$</span>term, <span class="st">"PATH-|DISEASE-PSP"</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>dt.gmt.sel <span class="ot">&lt;-</span> dt.gmt[sel.terms<span class="fl">.2</span>,]</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>dt.gmt.sel.clean <span class="ot">&lt;-</span> dt.gmt.sel <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Col_new=</span><span class="fu">str_remove_all</span>(gene, <span class="st">"-."</span>))</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>dat.phospho.sel <span class="ot">&lt;-</span> dt.gmt.sel.clean <span class="sc">%&gt;%</span> <span class="fu">separate</span>(Col_new, <span class="at">into=</span><span class="fu">c</span>(<span class="st">"uniprot"</span>,<span class="st">"phospho_id"</span>,<span class="st">"direction"</span>), <span class="at">sep=</span><span class="st">";"</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">phospho_id_clean=</span><span class="fu">str_remove</span>(phospho_id, <span class="st">"-p"</span>)) <span class="sc">%&gt;%</span> <span class="fu">unite</span>(<span class="st">"Final.Feature"</span>, <span class="fu">c</span>(<span class="st">"uniprot"</span>,<span class="st">"phospho_id_clean"</span>), <span class="at">sep=</span><span class="st">";"</span>,<span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">mor=</span><span class="fu">if_else</span>(direction<span class="sc">==</span><span class="st">"u"</span>,<span class="dv">1</span>,<span class="sc">-</span><span class="dv">1</span>)) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">likelihood=</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(term, Final.Feature, mor, likelihood) <span class="sc">%&gt;%</span> <span class="fu">rownames_to_column</span>() <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>rowname)</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>KSN_exp_1 <span class="ot">&lt;-</span> <span class="fu">intersect_regulons</span>(<span class="fu">as.matrix</span>(merged.de.dat.format), dat.phospho.sel, </span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>             <span class="at">.source =</span> term, <span class="at">.target =</span> Final.Feature, <span class="at">minsize=</span><span class="dv">5</span>)</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="co"># to remove any repeated edges-if present-</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>KSN_exp_1_clean <span class="ot">&lt;-</span> KSN_exp_1 <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">distinct</span>(term, Final.Feature,<span class="at">.keep_all=</span><span class="cn">TRUE</span>)</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="co"># similarly as before we implement the function run_wmean to infer pathway activities:</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>PATH_Act <span class="ot">&lt;-</span> <span class="fu">run_wmean</span>(<span class="at">mat =</span> <span class="fu">as.matrix</span>(merged.de.dat.format), <span class="at">.source =</span> <span class="st">"term"</span>, <span class="at">.target =</span> <span class="st">"Final.Feature"</span>, <span class="at">network =</span> KSN_exp_1_clean, <span class="at">times =</span> <span class="dv">1000</span>)</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>Path_Act <span class="ot">&lt;-</span> PATH_Act[PATH_Act<span class="sc">$</span>statistic <span class="sc">==</span> <span class="st">"norm_wmean"</span>,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">5</span>)] </span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>x3 <span class="ot">&lt;-</span> Path_Act <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Combo_score =</span> <span class="fu">abs</span>(score<span class="sc">*</span>p_value))</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>x4 <span class="ot">&lt;-</span> <span class="fu">arrange</span>(x3, <span class="fu">desc</span>(<span class="fu">abs</span>(Combo_score))) <span class="sc">%&gt;%</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="fu">group_by</span>(<span class="fu">sign</span>(Combo_score)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a><span class="co"># optional: create and save a customized barplot of visualizing the top results:</span></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a><span class="co"># the following function was also inspired by the clusterProfiler R package (https://doi.org/10.1016/j.xinn.2021.100141) tutorial: https://yulab-smu.github.io/clusterProfiler-book/</span></span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(x4, <span class="at">showCategory =</span> <span class="dv">10</span>,</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a><span class="fu">aes</span>(Combo_score, <span class="co">#richFactor</span></span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a><span class="fu">fct_reorder</span>(source, <span class="fu">abs</span>(score)))) <span class="sc">+</span></span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">xend=</span><span class="dv">0</span>, <span class="at">yend =</span> source)) <span class="sc">+</span></span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">color=</span>p_value, <span class="at">size =</span> <span class="fu">abs</span>(score))) <span class="sc">+</span></span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_color_gradientn</span>(<span class="at">colours=</span><span class="fu">c</span>(<span class="st">"#f7ca64"</span>, <span class="st">"#46bac2"</span>,</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a><span class="st">"#7e62a3"</span>),</span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a><span class="at">trans =</span> <span class="st">"log10"</span>,</span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a><span class="at">guide=</span><span class="fu">guide_colorbar</span>(<span class="at">reverse=</span><span class="cn">TRUE</span>,</span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a><span class="at">order=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_size_continuous</span>(<span class="at">range=</span><span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">10</span>)) <span class="sc">+</span></span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_dose</span>(<span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a><span class="fu">xlab</span>(<span class="st">"Combined Score"</span>) <span class="sc">+</span></span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a><span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span> </span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a><span class="fu">ggtitle</span>(<span class="st">"PTMSigDB Pathways"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_PHOSP_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="864"></p>
+</div>
+</div>
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+<p>Session Information</p>
+</button>
+<div id="collapseOne" class="accordion-collapse collapse">
+<div>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>- Session info ---------------------------------------------------------------
+ setting  value
+ version  R version 4.1.0 (2021-05-18)
+ os       Windows 10 x64 (build 19045)
+ system   x86_64, mingw32
+ ui       RTerm
+ language (EN)
+ collate  English_United States.1252
+ ctype    English_United States.1252
+ tz       Europe/Berlin
+ date     2024-04-21
+ pandoc   3.1.1 @ C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools/ (via rmarkdown)
+
+- Packages -------------------------------------------------------------------
+ package          * version   date (UTC) lib source
+ AnnotationDbi    * 1.56.2    2021-11-09 [1] Bioconductor
+ ape                5.7-1     2023-03-13 [1] CRAN (R 4.1.3)
+ aplot              0.2.2     2023-10-06 [1] CRAN (R 4.1.0)
+ backports          1.4.1     2021-12-13 [1] CRAN (R 4.1.2)
+ Biobase          * 2.54.0    2021-10-26 [1] Bioconductor
+ BiocGenerics     * 0.40.0    2021-10-26 [1] Bioconductor
+ BiocParallel       1.28.3    2021-12-09 [1] Bioconductor
+ Biostrings         2.62.0    2021-10-26 [1] Bioconductor
+ bit                4.0.5     2022-11-15 [1] CRAN (R 4.1.3)
+ bit64              4.0.5     2020-08-30 [1] CRAN (R 4.1.0)
+ bitops             1.0-7     2021-04-24 [1] CRAN (R 4.1.0)
+ blob               1.2.4     2023-03-17 [1] CRAN (R 4.1.3)
+ cachem             1.0.6     2021-08-19 [1] CRAN (R 4.1.1)
+ cellranger         1.1.0     2016-07-27 [1] CRAN (R 4.1.0)
+ checkmate          2.1.0     2022-04-21 [1] CRAN (R 4.1.3)
+ cli                3.4.1     2022-09-23 [1] CRAN (R 4.1.3)
+ clusterProfiler  * 4.2.2     2022-01-13 [1] Bioconductor
+ colorspace         2.1-0     2023-01-23 [1] CRAN (R 4.1.3)
+ crayon             1.5.2     2022-09-29 [1] CRAN (R 4.1.3)
+ curl               5.2.0     2023-12-08 [1] CRAN (R 4.1.0)
+ data.table         1.14.8    2023-02-17 [1] CRAN (R 4.1.3)
+ DBI                1.1.3     2022-06-18 [1] CRAN (R 4.1.3)
+ decoupleR        * 2.1.6     2022-02-16 [1] Github (saezlab/decoupleR@e74bdfa)
+ digest             0.6.29    2021-12-01 [1] CRAN (R 4.1.3)
+ DO.db              2.9       2021-09-29 [1] Bioconductor
+ DOSE             * 3.20.1    2021-11-18 [1] Bioconductor
+ downloader         0.4       2015-07-09 [1] CRAN (R 4.1.1)
+ dplyr            * 1.1.2     2023-04-20 [1] CRAN (R 4.1.3)
+ enrichplot         1.14.2    2022-02-24 [1] Bioconductor
+ evaluate           0.22      2023-09-29 [1] CRAN (R 4.1.0)
+ fansi              1.0.4     2023-01-22 [1] CRAN (R 4.1.3)
+ farver             2.1.1     2022-07-06 [1] CRAN (R 4.1.3)
+ fastmap            1.1.0     2021-01-25 [1] CRAN (R 4.1.0)
+ fastmatch          1.1-3     2021-07-23 [1] CRAN (R 4.1.1)
+ fgsea              1.20.0    2021-10-26 [1] Bioconductor
+ forcats          * 1.0.0     2023-01-29 [1] CRAN (R 4.1.3)
+ fs                 1.5.2     2021-12-08 [1] CRAN (R 4.1.3)
+ generics           0.1.3     2022-07-05 [1] CRAN (R 4.1.3)
+ GenomeInfoDb       1.30.1    2022-01-30 [1] Bioconductor
+ GenomeInfoDbData   1.2.7     2021-09-25 [1] Bioconductor
+ ggforce            0.4.1     2022-10-04 [1] CRAN (R 4.1.3)
+ ggfun              0.1.3     2023-09-15 [1] CRAN (R 4.1.0)
+ ggplot2          * 3.4.3     2023-08-14 [1] CRAN (R 4.1.0)
+ ggplotify          0.1.2     2023-08-09 [1] CRAN (R 4.1.0)
+ ggraph             2.1.0     2022-10-09 [1] CRAN (R 4.1.3)
+ ggrepel            0.9.3     2023-02-03 [1] CRAN (R 4.1.3)
+ ggtree             3.2.1     2021-11-16 [1] Bioconductor
+ glue               1.6.2     2022-02-24 [1] CRAN (R 4.1.3)
+ GO.db              3.14.0    2021-09-25 [1] Bioconductor
+ GOSemSim           2.20.0    2021-10-26 [1] Bioconductor
+ graphlayouts       0.8.4     2022-11-24 [1] CRAN (R 4.1.3)
+ gridExtra          2.3       2017-09-09 [1] CRAN (R 4.1.0)
+ gridGraphics       0.5-1     2020-12-13 [1] CRAN (R 4.1.1)
+ gtable             0.3.4     2023-08-21 [1] CRAN (R 4.1.0)
+ here             * 1.0.1     2020-12-13 [1] CRAN (R 4.1.3)
+ hms                1.1.3     2023-03-21 [1] CRAN (R 4.1.3)
+ htmltools          0.5.4     2022-12-07 [1] CRAN (R 4.1.3)
+ htmlwidgets        1.6.2     2023-03-17 [1] CRAN (R 4.1.3)
+ httr               1.4.7     2023-08-15 [1] CRAN (R 4.1.0)
+ igraph             1.4.2     2023-04-07 [1] CRAN (R 4.1.3)
+ IRanges          * 2.28.0    2021-10-26 [1] Bioconductor
+ jsonlite           1.8.4     2022-12-06 [1] CRAN (R 4.1.3)
+ KEGGREST           1.34.0    2021-10-26 [1] Bioconductor
+ knitr              1.44      2023-09-11 [1] CRAN (R 4.1.0)
+ labeling           0.4.3     2023-08-29 [1] CRAN (R 4.1.0)
+ later              1.3.0     2021-08-18 [1] CRAN (R 4.1.3)
+ lattice            0.21-8    2023-04-05 [1] CRAN (R 4.1.3)
+ lazyeval           0.2.2     2019-03-15 [1] CRAN (R 4.1.0)
+ lifecycle          1.0.3     2022-10-07 [1] CRAN (R 4.1.3)
+ limma            * 3.50.3    2022-04-07 [1] Bioconductor
+ logger             0.2.2     2021-10-19 [1] CRAN (R 4.1.0)
+ lubridate        * 1.9.2     2023-02-10 [1] CRAN (R 4.1.3)
+ magrittr           2.0.3     2022-03-30 [1] CRAN (R 4.1.3)
+ MASS               7.3-58.3  2023-03-07 [1] CRAN (R 4.1.3)
+ Matrix             1.5-4     2023-04-04 [1] CRAN (R 4.1.3)
+ memoise            2.0.1     2021-11-26 [1] CRAN (R 4.1.2)
+ munsell            0.5.0     2018-06-12 [1] CRAN (R 4.1.0)
+ nlme               3.1-162   2023-01-31 [1] CRAN (R 4.1.3)
+ OmnipathR        * 3.2.8     2022-02-24 [1] Bioconductor
+ org.Hs.eg.db     * 3.14.0    2021-09-25 [1] Bioconductor
+ patchwork          1.1.3     2023-08-14 [1] CRAN (R 4.1.0)
+ pillar             1.9.0     2023-03-22 [1] CRAN (R 4.1.3)
+ pkgconfig          2.0.3     2019-09-22 [1] CRAN (R 4.1.0)
+ plyr               1.8.8     2022-11-11 [1] CRAN (R 4.1.3)
+ png                0.1-8     2022-11-29 [1] CRAN (R 4.1.3)
+ polyclip           1.10-4    2022-10-20 [1] CRAN (R 4.1.3)
+ prettyunits        1.2.0     2023-09-24 [1] CRAN (R 4.1.0)
+ progress           1.2.2     2019-05-16 [1] CRAN (R 4.1.0)
+ purrr            * 1.0.1     2023-01-10 [1] CRAN (R 4.1.3)
+ qvalue             2.26.0    2021-10-26 [1] Bioconductor
+ R6                 2.5.1     2021-08-19 [1] CRAN (R 4.1.1)
+ rappdirs           0.3.3     2021-01-31 [1] CRAN (R 4.1.0)
+ RColorBrewer       1.1-3     2022-04-03 [1] CRAN (R 4.1.3)
+ Rcpp               1.0.9     2022-07-08 [1] CRAN (R 4.1.3)
+ RCurl              1.98-1.12 2023-03-27 [1] CRAN (R 4.1.3)
+ readr            * 2.1.4     2023-02-10 [1] CRAN (R 4.1.3)
+ readxl             1.4.2     2023-02-09 [1] CRAN (R 4.1.3)
+ reshape2           1.4.4     2020-04-09 [1] CRAN (R 4.1.0)
+ rlang              1.1.1     2023-04-28 [1] CRAN (R 4.1.0)
+ rmarkdown          2.25      2023-09-18 [1] CRAN (R 4.1.0)
+ rprojroot          2.0.3     2022-04-02 [1] CRAN (R 4.1.3)
+ RSQLite            2.3.1     2023-04-03 [1] CRAN (R 4.1.3)
+ rstudioapi         0.15.0    2023-07-07 [1] CRAN (R 4.1.0)
+ S4Vectors        * 0.32.4    2022-04-03 [1] Bioconductor
+ scales             1.2.1     2022-08-20 [1] CRAN (R 4.1.3)
+ scatterpie         0.2.1     2023-06-07 [1] CRAN (R 4.1.0)
+ sessioninfo        1.2.2     2021-12-06 [1] CRAN (R 4.1.2)
+ shadowtext         0.1.2     2022-04-22 [1] CRAN (R 4.1.3)
+ statmod            1.5.0     2023-01-06 [1] CRAN (R 4.1.3)
+ stringi            1.7.6     2021-11-29 [1] CRAN (R 4.1.2)
+ stringr          * 1.5.0     2022-12-02 [1] CRAN (R 4.1.3)
+ tibble           * 3.2.1     2023-03-20 [1] CRAN (R 4.1.3)
+ tidygraph          1.2.3     2023-02-01 [1] CRAN (R 4.1.3)
+ tidyr            * 1.3.0     2023-01-24 [1] CRAN (R 4.1.3)
+ tidyselect         1.2.0     2022-10-10 [1] CRAN (R 4.1.0)
+ tidytree           0.4.5     2023-08-10 [1] CRAN (R 4.1.0)
+ tidyverse        * 2.0.0     2023-02-22 [1] CRAN (R 4.1.3)
+ timechange         0.2.0     2023-01-11 [1] CRAN (R 4.1.3)
+ treeio             1.18.1    2021-11-14 [1] Bioconductor
+ tweenr             2.0.2     2022-09-06 [1] CRAN (R 4.1.3)
+ tzdb               0.3.0     2022-03-28 [1] CRAN (R 4.1.3)
+ utf8               1.2.3     2023-01-31 [1] CRAN (R 4.1.3)
+ vctrs              0.6.2     2023-04-19 [1] CRAN (R 4.1.0)
+ viridis            0.6.4     2023-07-22 [1] CRAN (R 4.1.0)
+ viridisLite        0.4.2     2023-05-02 [1] CRAN (R 4.1.0)
+ vroom              1.6.1     2023-01-22 [1] CRAN (R 4.1.3)
+ withr              2.5.1     2023-09-26 [1] CRAN (R 4.1.0)
+ xfun               0.39      2023-04-20 [1] CRAN (R 4.1.3)
+ xml2               1.3.3     2021-11-30 [1] CRAN (R 4.1.3)
+ XVector            0.34.0    2021-10-26 [1] Bioconductor
+ yaml               2.3.7     2023-01-23 [1] CRAN (R 4.1.3)
+ yulab.utils        0.1.0     2023-09-20 [1] CRAN (R 4.1.0)
+ zlibbioc           1.40.0    2021-10-26 [1] Bioconductor
+
+ [1] C:/Program Files/R/R-4.1.0/library
+
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+&nbsp;
+<hr>
+<p style="text-align: center;">A work by <a href="https://github.com/Jasonmbg/">Efstathios-Iason Vlachavas</a></p>
+<p style="text-align: center;"><span style="color: #808080;"><em>svlachavas@eie.gr</em></span></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://orcid.org/0000-0002-3432-9053" class="fa fa-orcid"></a>
+    <a href="https://www.linkedin.com/in/efstathios-iason-vlachavas-164b6085/" class="fa fa-linkedin"></a>
+    <a href="https://github.com/Jasonmbg/" class="fa fa-github"></a>
+</p>
+
+&nbsp;
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

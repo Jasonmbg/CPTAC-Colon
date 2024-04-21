@@ -1,0 +1,307 @@
+---
+title: "CPTAC phosphoproteome analysis"
+number-sections: true
+include-after-body: "footer.html"
+format: 
+ html:
+  code-fold: true
+  code-summary: "Show the code"
+author: Efstathios-Iason Vlachavas
+date: last-modified
+date-format: YYYY-MM-DD
+toc: true
+theme: "Journal"
+editor: visual
+warning: false
+---
+
+# CPTAC-Colon dataset phosphoproteome analysis overview
+
+### Document the analysis of the phosphoproteomics data from the CPTAC-Colon dataset for the ACCC-CRC manuscript.
+
+Similarly proceed by initially loading the necessary R packages, along with importing the clinical information.
+
+```{r}
+
+library(tidyverse)
+library(limma)
+library(OmnipathR)
+library(decoupleR)
+library(here)
+library(clusterProfiler)
+library(DOSE)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+
+dr_here()
+
+final.updated.clin.mut.dat <- read_tsv(here("Data","CPTAC_clinical_final_mod_INFO.tsv"))
+
+tot.samples <- final.updated.clin.mut.dat$`Sample ID` # 79
+
+load(here("Data","data_phosphoprotein_quantification.rda"))
+
+dat.phospho <- dat.phospho %>% dplyr::select(-c(PHOSPHOSITE,GENE_SYMBOL)) %>% # GENE_SYMBOL
+  dplyr::distinct(ENTITY_STABLE_ID,.keep_all=TRUE) %>% 
+  column_to_rownames("ENTITY_STABLE_ID") %>%  
+  dplyr::select(all_of(tot.samples)) 
+
+dat.phospho.clean <- dat.phospho[!rowSums(is.na(dat.phospho)) > 67, ] #  ~85% of total 79 samples
+
+cc <- rownames(dat.phospho.clean)
+
+cc.rm <- str_remove_all(cc, "[p]")
+
+rownames(dat.phospho.clean) <- as.character(cc.rm)
+
+phospho.mat <- as.matrix(dat.phospho.clean)
+
+msi_char_vec <- final.updated.clin.mut.dat$`MSI Status`
+msi_char_upd <- recode(msi_char_vec, MSS = "MSS", `MSI-H`="MSI", .default = NA_character_)
+final.updated.clin.mut.dat$`MSI Status` <- msi_char_upd
+
+msi_cond <- factor(final.updated.clin.mut.dat$`MSI Status`)
+table(msi_cond) # 14 MSI_H; 65 MSS
+
+design <- model.matrix(~0 + msi_cond) # here
+
+colnames(design) <- gsub("msi_cond", "", colnames(design))
+
+fit <- lmFit(phospho.mat,design)
+
+cm <- makeContrasts(Comp1= MSS-MSI, levels = colnames(coef(fit)))
+
+fit2 <- contrasts.fit(fit, cm)
+fit3 <- eBayes(fit2, trend=TRUE,robust = TRUE)
+
+comp1_stat <- limma::topTable(fit3, coef=1, number=nrow(fit3), adjust.method="fdr", sort.by="none") %>% dplyr::select(t) %>% dplyr::rename(MSS_vs_MSI_t_stat=t) %>% drop_na()
+
+```
+
+### Then continue with creating the PPI network by Omnipath and infer relative kinase activities, by implementing also statistical methods from the decoupleR R package.
+
+```{r}
+
+omnipath_ptm <- get_signed_ptms() # fetch signed enzyme-substrate interactions
+
+# As in all biological databases, the resources constituting OmniPath contain putatively "wrong/biased" records, some of them more, others less. Here we see all these likely erroneous records are mainly retrieved from only one resource called ProtMapper. ProtMapper uses literature mining algorithms (REACH, Sparser), which are known to produce a number of false positives in their output.
+
+# On this premise, we should consider removing the only ProtMapper *likely erroneous database records-false positive* interactions from the fetched data frame;
+
+# Which actually meant: remove if only present in ProtMapper, or keep if identified in at least one additional resource (i.e. if it is from ProtMapper, but also another resource confirms, then we keep the record).
+
+omnipath_ptm <- omnipath_ptm %>% filter(!grepl('ProtMapper', sources) | n_resources > 1) 
+
+omnipath_ptm <- omnipath_ptm[omnipath_ptm$modification %in% c("dephosphorylation","phosphorylation"),]
+KSN <- omnipath_ptm[,c(4,3)]
+KSN$substrate_genesymbol <- paste(KSN$substrate_genesymbol,omnipath_ptm$residue_type, sep ="_")
+KSN$substrate_genesymbol <- paste(KSN$substrate_genesymbol,omnipath_ptm$residue_offset, sep = "")
+KSN$mor <- ifelse(omnipath_ptm$modification == "phosphorylation", 1, -1)
+KSN$likelihood <- 1
+
+# we remove ambiguous modes of regulations
+KSN$id <- paste(KSN$substrate_genesymbol,KSN$enzyme_genesymbol,sep ="")
+KSN <- KSN[!duplicated(KSN$id),]
+KSN <- KSN[,-5]
+
+# rename KSN to fit decoupler format for downstream analysis
+names(KSN)[c(1,2)] <- c("phospho_site","kinase")
+
+# perform kinase activity enrichment analysis for the comparison of interest;
+
+# implement the function below to plot top differentially regulated kinases
+# https://github.com/saezlab/kinase_tf_mini_tuto/blob/main/code/utils.R
+
+plot_top_features <- function(data, n_top) {
+  
+  colnames(data) <- "value"
+  
+  arranged <- data %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "id") %>%
+    arrange(desc(value))
+  
+  top_up <- slice_head(arranged, n = n_top)
+  top_down <- slice_tail(arranged, n = n_top)
+  
+  p <- bind_rows(list(up = top_up, down = top_down), .id = "status") %>%
+    mutate(id = fct_inorder(id)) %>%
+    ggplot(aes(x = value, y = id, fill = status)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c("up" = "red", "down" = "blue")) +
+    theme_bw()
+  
+  return(p)
+  
+}
+
+KSN_exp_1 <- intersect_regulons(as.matrix(comp1_stat), KSN, .source = kinase, .target = phospho_site, minsize=5) # keep only the *present* kinases based on expressed targets;
+
+# User is strongly encouraged to check https://github.com/saezlab/decoupleR for more info on which are the available algorithms and how are employed.
+
+kin_activity_1 <- run_wmean(mat = as.matrix(comp1_stat), .source = "kinase", .target = "phospho_site",network = KSN_exp_1, times = 1000)
+
+kin_act_MSS_vs_MSI_dat <- kin_activity_1 %>% filter(statistic=="norm_wmean") %>% dplyr::select(statistic,source,score,p_value)
+write_tsv(kin_act_MSS_vs_MSI_dat, file="CPTAC.Colon.Kinact.MSS_vs_MSI.RES.TotalTable.tsv")
+
+kin_activity_1 <- kin_activity_1[kin_activity_1$statistic == "norm_wmean",c(2,4)] %>% column_to_rownames(var="source")
+
+# final visualization:
+
+plot_top_features(kin_activity_1, n_top = 10) +
+  ggtitle('MSS vs MSI Kinase activity space')
+
+
+```
+
+### Set-up an additional customized approach for preparing the input for ssGSEA analysis using the processed phosphodata from above
+
+```{r}
+
+# proceed with the defined comp1_stat object from above; 
+
+cptac_out_de_form <- comp1_stat %>% rownames_to_column("Feature_ID") %>% 
+separate("Feature_ID", sep="_", into=c("GeneSymbol","PhosID"))
+
+xx <- unique(cptac_out_de_form$GeneSymbol)
+uni.ids <-mapIds(org.Hs.eg.db, keys=xx, column="UNIPROT", keytype="SYMBOL", multiVals="first")
+uni.ids2 <- uni.ids %>% enframe(name="Gene_Symbol",value="Uniprot_ID")
+
+# from checking above, different gene symbols can map to the same UniprotID; on this purpose further remove them;
+table(duplicated(uni.ids2$Gene_Symbol)) # 0
+table(duplicated(uni.ids2$Uniprot_ID)) # 115
+
+uni.ids3 <- uni.ids2[!duplicated(uni.ids2$Uniprot_ID),]
+uni.ids4 <- uni.ids3[!is.na(uni.ids3$Uniprot_ID),]
+# merge the two DFs to have the uniprotIDs along with the phosphositeIDs
+merged.de.dat <- inner_join(cptac_out_de_form, uni.ids4, by=c("GeneSymbol"="Gene_Symbol"))
+
+# final formatting of our input file measurements
+merged.de.dat.format <- merged.de.dat %>% unite("Final.Feature", c("Uniprot_ID","PhosID"), sep=";",remove = FALSE) %>% dplyr::select(Final.Feature, MSS_vs_MSI_t_stat) %>% dplyr::distinct(Final.Feature,.keep_all=TRUE) %>% 
+mutate(Final.Feature=str_c(Final.Feature, "p", sep="-"))  
+  
+# write_tsv(merged.de.dat.format, file="CPTAC_Colon_Format_UC_Input_PTMSEA_Tstat_MSSvsMSI.tsv")
+
+```
+
+#### After running ssGSEA independently, load the selected pathways of interest and visualize them.
+
+```{r, fig.width=9}
+
+out_paths <- read_tsv(here("Data","PTMSEA_CPTAC_Colon_MSSvsMSI_NES_Mod.tsv"))
+
+sel_paths <- c("PATH-NP_B_CELL_RECEPTOR_PATHWAY","PATH-BI_ISCHEMIA",
+              "PATH-NP_CCR7_PATHWAY","PATH-NP_IL11_PATHWAY","PATH-NP_IL33_PATHWAY",
+              "PATH-NP_TGF_BETA_PATHWAY","PATH-NP_TNF_ALPHA_PATHWAY",
+              "PATH-WP_Ras_signaling","PATH-NP_T_CELL_RECEPTOR_PATHWAY",
+              "PATH-WP_PI3K-Akt_signaling_pathway")
+
+sel_paths_2 <- read_tsv(here("Data","CPTAC_MSS_vs_MSI_PTM_SEA_Paths.txt"))
+sel_paths_IDs <- sel_paths_2 %>% pull(PTMSEA_ID)
+
+out_paths_mod <- out_paths %>% dplyr::filter(PTMSEA_ID%in%sel_paths_IDs) %>% dplyr::rename(PTM_SEA_Paths=PTMSEA_ID) %>% 
+mutate(Status = ifelse(NES_value >= 0, "Up", "Down")) %>% 
+dplyr::arrange(desc(abs(NES_value)))
+
+ggplot(out_paths_mod, 
+aes(NES_value, fct_reorder(PTM_SEA_Paths, NES_value),
+fill = Status)) +
+geom_bar(stat = "identity", position = "identity") +
+scale_fill_manual(values = c("Down" = "blue", "Up" = "red")) +
+theme_dose(12) +
+xlab("Normalized Enrichment Score") +
+ylab(NULL) +
+ggtitle("PTMSEA_Pathways (MSS vs MSI)")    
+
+```
+
+### Also highlight an alternative implementation for pathway activity inference using the following framework: PTM-SEA -> decoupleR
+
+```{r, fig.width=9}
+
+# this we will use downstream for pathway activity
+comp1_stat_cptac_ptm <- limma::topTable(fit3, coef=1, number=nrow(fit3), adjust.method="fdr", sort.by="none") %>% 
+  dplyr::select(t) %>% 
+  dplyr::rename(MSI_HvsMSS_t_stat=t) %>% 
+  drop_na() %>%
+  rownames_to_column() %>% 
+  separate("rowname", sep="_", into=c("GeneSymbol","PhosID"))
+
+xx <- unique(comp1_stat_cptac_ptm$GeneSymbol) # the gene symbols of interest
+# query the matching uniprotIDs
+uni.ids <-mapIds(org.Hs.eg.db, keys=xx, column="UNIPROT", keytype="SYMBOL", multiVals="first")
+uni.ids2 <- uni.ids %>% enframe(name="Gene_Symbol",value="Uniprot_ID") # Attention !!
+
+# from checking above, different gene symbols can map to the same UniprotID; on this purpose further remove them;
+table(duplicated(uni.ids2$Gene_Symbol)) # 0
+table(duplicated(uni.ids2$Uniprot_ID)) # 115
+uni.ids3 <- uni.ids2[!duplicated(uni.ids2$Uniprot_ID),]
+uni.ids4 <- uni.ids3[!is.na(uni.ids3$Uniprot_ID),]
+# merge the two DFs to have the uniprotIDs along with the phosphositeIDs
+merged.de.dat <- inner_join(comp1_stat_cptac_ptm, uni.ids4, by=c("GeneSymbol"="Gene_Symbol")) # 20725
+
+# final formating of our input file measurements
+merged.de.dat.format <- merged.de.dat %>% unite("Final.Feature", c("Uniprot_ID","PhosID"), sep=";",remove = FALSE) %>%
+dplyr::select(Final.Feature, MSI_HvsMSS_t_stat) %>% dplyr::distinct(Final.Feature,.keep_all=TRUE) %>% column_to_rownames("Final.Feature")
+
+# continue with the respective PTMSigDB database gmt file:
+# download from here: https://proteomics.broadapps.org/ptmsigdb/ (version: v1.9.1)
+dt.gmt <- read.gmt(here("Data","ptm.sig.db.all.uniprot.human.v1.9.1.gmt"))
+
+# Break gene into compartments; also subset term into specific terms;
+sel.terms.2 <- str_detect(dt.gmt$term, "PATH-|DISEASE-PSP")
+dt.gmt.sel <- dt.gmt[sel.terms.2,]
+dt.gmt.sel.clean <- dt.gmt.sel %>% mutate(Col_new=str_remove_all(gene, "-."))
+dat.phospho.sel <- dt.gmt.sel.clean %>% separate(Col_new, into=c("uniprot","phospho_id","direction"), sep=";") %>% mutate(phospho_id_clean=str_remove(phospho_id, "-p")) %>% unite("Final.Feature", c("uniprot","phospho_id_clean"), sep=";",remove = FALSE) %>% mutate(mor=if_else(direction=="u",1,-1)) %>% mutate(likelihood=1) %>% dplyr::select(term, Final.Feature, mor, likelihood) %>% rownames_to_column() %>% dplyr::select(-rowname)
+KSN_exp_1 <- intersect_regulons(as.matrix(merged.de.dat.format), dat.phospho.sel, 
+             .source = term, .target = Final.Feature, minsize=5)
+
+# to remove any repeated edges-if present-
+KSN_exp_1_clean <- KSN_exp_1 %>% dplyr::distinct(term, Final.Feature,.keep_all=TRUE)
+
+# similarly as before we implement the function run_wmean to infer pathway activities:
+PATH_Act <- run_wmean(mat = as.matrix(merged.de.dat.format), .source = "term", .target = "Final.Feature", network = KSN_exp_1_clean, times = 1000)
+
+Path_Act <- PATH_Act[PATH_Act$statistic == "norm_wmean",c(2,4,5)] 
+
+x3 <- Path_Act %>% dplyr::mutate(Combo_score = abs(score*p_value))
+x4 <- arrange(x3, desc(abs(Combo_score))) %>%
+group_by(sign(Combo_score)) %>%
+dplyr::slice(1:10)
+
+# optional: create and save a customized barplot of visualizing the top results:
+# the following function was also inspired by the clusterProfiler R package (https://doi.org/10.1016/j.xinn.2021.100141) tutorial: https://yulab-smu.github.io/clusterProfiler-book/
+
+ggplot(x4, showCategory = 10,
+aes(Combo_score, #richFactor
+fct_reorder(source, abs(score)))) +
+geom_segment(aes(xend=0, yend = source)) +
+geom_point(aes(color=p_value, size = abs(score))) +
+scale_color_gradientn(colours=c("#f7ca64", "#46bac2",
+"#7e62a3"),
+trans = "log10",
+guide=guide_colorbar(reverse=TRUE,
+order=1)) +
+scale_size_continuous(range=c(2, 10)) +
+theme_dose(12) +
+xlab("Combined Score") +
+ylab(NULL) + 
+ggtitle("PTMSigDB Pathways")
+
+```
+
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+
+Session Information
+
+</button>
+
+::: {#collapseOne .accordion-collapse .collapse}
+<div>
+
+```{r}
+sessioninfo::session_info()
+```
+
+</div>
+:::

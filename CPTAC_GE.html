@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Efstathios-Iason Vlachavas">
+<meta name="dcterms.date" content="2024-04-21">
+
+<title>CPTAC RNASeq Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="CPTAC_GE_files/libs/clipboard/clipboard.min.js"></script>
+<script src="CPTAC_GE_files/libs/quarto-html/quarto.js"></script>
+<script src="CPTAC_GE_files/libs/quarto-html/popper.min.js"></script>
+<script src="CPTAC_GE_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="CPTAC_GE_files/libs/quarto-html/anchor.min.js"></script>
+<link href="CPTAC_GE_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="CPTAC_GE_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="CPTAC_GE_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="CPTAC_GE_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="CPTAC_GE_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#cptac-colon-dataset-rnaseq-analysis-overview" id="toc-cptac-colon-dataset-rnaseq-analysis-overview" class="nav-link active" data-scroll-target="#cptac-colon-dataset-rnaseq-analysis-overview"><span class="header-section-number">1</span> CPTAC-Colon dataset RNASeq analysis overview</a>
+  <ul class="collapse">
+  <li><a href="#reproduce-the-analysis-of-the-rnaseq-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript." id="toc-reproduce-the-analysis-of-the-rnaseq-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript." class="nav-link" data-scroll-target="#reproduce-the-analysis-of-the-rnaseq-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript."><span class="header-section-number">1.0.1</span> Reproduce the analysis of the rnaseq data from the CPTAC-Colon dataset for the ACCC-CRC manuscript.</a></li>
+  <li><a href="#then-load-preprocess-the-rnaseq-data" id="toc-then-load-preprocess-the-rnaseq-data" class="nav-link" data-scroll-target="#then-load-preprocess-the-rnaseq-data"><span class="header-section-number">1.0.2</span> Then load-preprocess the rnaseq data</a></li>
+  <li><a href="#proceed-with-de-analysis-comparing-msi-vs-mss-patients" id="toc-proceed-with-de-analysis-comparing-msi-vs-mss-patients" class="nav-link" data-scroll-target="#proceed-with-de-analysis-comparing-msi-vs-mss-patients"><span class="header-section-number">1.1</span> Proceed with DE analysis comparing MSI vs MSS patients</a></li>
+  <li><a href="#perform-relative-pathwaytf-activity-analyses" id="toc-perform-relative-pathwaytf-activity-analyses" class="nav-link" data-scroll-target="#perform-relative-pathwaytf-activity-analyses"><span class="header-section-number">1.2</span> Perform relative Pathway/TF-activity analyses</a></li>
+  <li><a href="#create-sub-parts-for-supplementary-figure-3" id="toc-create-sub-parts-for-supplementary-figure-3" class="nav-link" data-scroll-target="#create-sub-parts-for-supplementary-figure-3"><span class="header-section-number">1.3</span> Create <em>sub-parts</em> for Supplementary Figure 3</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">CPTAC RNASeq Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Efstathios-Iason Vlachavas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2024-04-21</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="cptac-colon-dataset-rnaseq-analysis-overview" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> CPTAC-Colon dataset RNASeq analysis overview</h1>
+<section id="reproduce-the-analysis-of-the-rnaseq-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript." class="level3" data-number="1.0.1">
+<h3 data-number="1.0.1" class="anchored" data-anchor-id="reproduce-the-analysis-of-the-rnaseq-data-from-the-cptac-colon-dataset-for-the-accc-crc-manuscript."><span class="header-section-number">1.0.1</span> Reproduce the analysis of the rnaseq data from the CPTAC-Colon dataset for the ACCC-CRC manuscript.</h3>
+<p>Initially start by loading the necessary R packages, along with importing the clinical information.</p>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load the respective packages and initially read the necessary clinical data:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(limma)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(progeny)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dorothea)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(decoupleR)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xml2)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(downlit)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ComplexHeatmap)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(circlize)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">dr_here</span>()</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>clin.dat.cptac <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"Data"</span>, <span class="st">"CPTAC_clinical_start_INFO.tsv"</span>))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>final.updated.clin.mut.dat <span class="ot">&lt;-</span> clin.dat.cptac <span class="sc">%&gt;%</span> </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">filter</span>(<span class="sc">!</span>Mut_Condition<span class="sc">%in%</span><span class="fu">c</span>(<span class="st">"ARAF_mut"</span>,<span class="st">"GNAS_mut"</span>,<span class="st">"NRAS_mut"</span>))</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(final.updated.clin.mut.dat, "CPTAC_clinical_final_mod_INFO.tsv")</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>tot.samples <span class="ot">&lt;-</span> final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">Sample ID</span><span class="st">`</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="then-load-preprocess-the-rnaseq-data" class="level3" data-number="1.0.2">
+<h3 data-number="1.0.2" class="anchored" data-anchor-id="then-load-preprocess-the-rnaseq-data"><span class="header-section-number">1.0.2</span> Then load-preprocess the rnaseq data</h3>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"data_RNA_Seq_v2_expression_median.rda"</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>rna.seq.dat <span class="ot">&lt;-</span> rna.seq.dat <span class="sc">%&gt;%</span> </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>Entrez_Gene_Id) </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>rna.seq.form <span class="ot">&lt;-</span> rna.seq.dat <span class="sc">%&gt;%</span> </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">distinct</span>(Hugo_Symbol,<span class="at">.keep_all=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">"Hugo_Symbol"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(tot.samples))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>norm.counts.mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(rna.seq.form)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>tl <span class="ot">&lt;-</span> final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">Primary Site</span><span class="st">`</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>tl.updated <span class="ot">&lt;-</span> <span class="fu">recode</span>(tl, <span class="st">"Ascending Colon"</span><span class="ot">=</span><span class="st">"right_sided"</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="st">"Cecum"</span><span class="ot">=</span><span class="st">"right_sided"</span>,<span class="st">"Descending Colon"</span><span class="ot">=</span><span class="st">"left_sided"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="st">"Splenic Flexure"</span><span class="ot">=</span><span class="st">"left_sided"</span>,<span class="st">"Hepatix Flexure"</span><span class="ot">=</span><span class="st">"right_sided"</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="st">"Sigmoid Colon"</span><span class="ot">=</span><span class="st">"left_sided"</span>, <span class="at">.default =</span> <span class="cn">NA_character_</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>final.updated.clin.mut.dat<span class="sc">$</span>tumor_location <span class="ot">&lt;-</span> tl.updated</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>plyr<span class="sc">::</span><span class="fu">count</span>(final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>) <span class="co"># here-MSI-H:14</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      x freq
+1 MSI-H   14
+2   MSS   65</code></pre>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>MSI.cond <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">normalizeQuantiles</span>(norm.counts.mat)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(y <span class="sc">&gt;</span> <span class="fu">log2</span>(<span class="dv">11</span>)) <span class="sc">&gt;=</span> <span class="dv">14</span> <span class="co"># the lowest N of samples attributed to the MSI-H group</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>y2 <span class="ot">&lt;-</span> y[keep,] </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>cptac.colon.exp.dat <span class="ot">&lt;-</span> y2 <span class="sc">%&gt;%</span> <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> <span class="fu">rownames_to_column</span>(<span class="st">"Gene_Symbol"</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(cptac.colon.exp.dat, "CPTAC.Colon.Norm.Filt.Exp.ACCCPaper.MSI.tsv")</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># or here: save(cptac.colon.exp.dat, file="CPTAC.Colon.Norm.Filt.Exp.ACCCPaper.MSI.rda")</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>final.exp.gene.vector.cptac <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">rownames</span>(y2))</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>exp.dt.accc.rnaseq.cptac <span class="ot">&lt;-</span> final.exp.gene.vector.cptac <span class="sc">%&gt;%</span> <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">rename</span>(<span class="at">ExpressedGenes.CPTAC.CRC.SelSamples.RNAseq=</span>value)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(exp.dt.accc.rnaseq.cptac,"ExpressedGenes.CPTAC.RNAseq.ACCC.Paper.MSI.tsv")</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMDS</span>(y2, <span class="at">labels=</span>MSI.cond, <span class="at">col=</span><span class="fu">as.numeric</span>(MSI.cond))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_GE_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="proceed-with-de-analysis-comparing-msi-vs-mss-patients" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="proceed-with-de-analysis-comparing-msi-vs-mss-patients"><span class="header-section-number">1.1</span> Proceed with DE analysis comparing MSI vs MSS patients</h2>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>msi_char_vec <span class="ot">&lt;-</span> final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>msi_char_upd <span class="ot">&lt;-</span> <span class="fu">recode</span>(msi_char_vec, <span class="at">MSS =</span> <span class="st">"MSS"</span>, <span class="st">`</span><span class="at">MSI-H</span><span class="st">`</span><span class="ot">=</span><span class="st">"MSI"</span>, <span class="at">.default =</span> <span class="cn">NA_character_</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span> <span class="ot">&lt;-</span> msi_char_upd</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>msi_cond <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(final.updated.clin.mut.dat<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># construct design matrix</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span>msi_cond) </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(design) <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"msi_cond"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(design))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lmFit</span>(y2,design)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>cm <span class="ot">&lt;-</span> <span class="fu">makeContrasts</span>(<span class="at">Comp1=</span> MSI<span class="sc">-</span>MSS,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">levels =</span> <span class="fu">colnames</span>(<span class="fu">coef</span>(fit)))</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>                    </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">contrasts.fit</span>(fit, cm)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>fit3 <span class="ot">&lt;-</span> <span class="fu">eBayes</span>(fit2, <span class="at">trend=</span><span class="cn">TRUE</span>,<span class="at">robust =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>comp1_stat <span class="ot">&lt;-</span> limma<span class="sc">::</span><span class="fu">topTable</span>(fit3, <span class="at">coef=</span><span class="dv">1</span>, <span class="at">number=</span><span class="fu">nrow</span>(fit3), <span class="at">adjust.method=</span><span class="st">"fdr"</span>, <span class="at">sort.by=</span><span class="st">"none"</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(t) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">MSI_HvsMSS_stat=</span>t)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>total.stat.dat <span class="ot">&lt;-</span> comp1_stat <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="perform-relative-pathwaytf-activity-analyses" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="perform-relative-pathwaytf-activity-analyses"><span class="header-section-number">1.2</span> Perform relative Pathway/TF-activity analyses</h2>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>PathwayActivity_zscore <span class="ot">&lt;-</span> <span class="fu">progeny</span>(total.stat.dat, </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">scale=</span><span class="cn">TRUE</span>, <span class="at">organism=</span><span class="st">"Human"</span>, <span class="at">top =</span> <span class="dv">100</span>, <span class="at">perm =</span> <span class="dv">10000</span>, <span class="at">z_scores =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(PathwayActivity_zscore) <span class="ot">&lt;-</span> <span class="st">"NES_MSI_vs_MSS"</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>PathwayActivity_zscore_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(PathwayActivity_zscore) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"Pathway"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(NES_MSI_vs_MSS) <span class="sc">%&gt;%</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Pathway =</span> <span class="fu">factor</span>(Pathway))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(PathwayActivity_zscore_df,<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Pathway, NES_MSI_vs_MSS), </span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">y =</span> NES_MSI_vs_MSS)) <span class="sc">+</span> </span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="fu">aes</span>(<span class="at">fill =</span> NES_MSI_vs_MSS), <span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> <span class="st">"darkblue"</span>, <span class="at">high =</span> <span class="st">"indianred"</span>, </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                       <span class="at">mid =</span> <span class="st">"whitesmoke"</span>, <span class="at">midpoint =</span> <span class="dv">0</span>) <span class="sc">+</span> </span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.x =</span> </span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>          <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">size =</span><span class="dv">10</span>, <span class="at">face=</span> <span class="st">"bold"</span>),</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span><span class="dv">10</span>, <span class="at">face=</span> <span class="st">"bold"</span>),</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()) <span class="sc">+</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Pathways"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_GE_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Path.act.dat.cptac.NES_MSI_vs_MSS <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(PathwayActivity_zscore)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Path.act.dat.cptac.NES_MSI_vs_MSS <span class="ot">&lt;-</span> Path.act.dat.cptac.NES_MSI_vs_MSS <span class="sc">%&gt;%</span> <span class="fu">rownames_to_column</span>() <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">PROGENY_pathways=</span>rowname)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(Path.act.dat.cptac.MSI_vs_MSS, file="PathwayActivity_zscore.PROGENY.CPTAC.COAD.Pathways.MSI_vs_MSS.tsv")</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Continue with TF activity analysis estimation</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># First we import the dorothea regulons (using only confidence A, B, and C), see dorothea publication for information on confidence levels</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># https://github.com/saezlab/kinase_tf_mini_tuto/blob/main/code/utils.R</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>plot_top_features <span class="ot">&lt;-</span> <span class="cf">function</span>(data, n_top) {</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(data) <span class="ot">&lt;-</span> <span class="st">"value"</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  arranged <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(value))</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  top_up <span class="ot">&lt;-</span> <span class="fu">slice_head</span>(arranged, <span class="at">n =</span> n_top)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  top_down <span class="ot">&lt;-</span> <span class="fu">slice_tail</span>(arranged, <span class="at">n =</span> n_top)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">list</span>(<span class="at">up =</span> top_up, <span class="at">down =</span> top_down), <span class="at">.id =</span> <span class="st">"status"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">id =</span> <span class="fu">fct_inorder</span>(id)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> id, <span class="at">fill =</span> status)) <span class="sc">+</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"up"</span> <span class="ot">=</span> <span class="st">"red"</span>, <span class="st">"down"</span> <span class="ot">=</span> <span class="st">"blue"</span>)) <span class="sc">+</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>()</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(p)</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                                  </span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>dorothea_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(dorothea_hs[dorothea_hs<span class="sc">$</span>confidence <span class="sc">%in%</span> </span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">"A"</span>,<span class="st">"B"</span>,<span class="st">"C"</span>),<span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">4</span>)])</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>dorothea_df<span class="sc">$</span>likelihood <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>dorothea_df <span class="ot">&lt;-</span> <span class="fu">intersect_regulons</span>(<span class="fu">as.matrix</span>(comp1_stat), dorothea_df, <span class="at">.source =</span> tf, <span class="at">.target =</span> target, <span class="at">minsize=</span><span class="dv">20</span>)</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>TF_activities_MSI_vs_MSS <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">run_wmean</span>(<span class="at">mat =</span> <span class="fu">as.matrix</span>(comp1_stat), <span class="at">network =</span> dorothea_df, <span class="at">.source =</span> <span class="st">"tf"</span>, <span class="at">.target =</span> <span class="st">"target"</span>, <span class="at">times =</span> <span class="dv">1000</span>))</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="co"># for further saving with all relevant information:</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>dat.TF_activities_MSI_vs_MSS <span class="ot">&lt;-</span> TF_activities_MSI_vs_MSS <span class="sc">%&gt;%</span> <span class="fu">filter</span>(statistic<span class="sc">==</span><span class="st">"norm_wmean"</span>) <span class="sc">%&gt;%</span> <span class="fu">select</span>(statistic,source,score,p_value)</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(dat.TF_activities_MSI_vs_MSS, file="CPTAC.Colon.TFact.MSI_vs_MSS.RES.TotalTable.tsv")</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>TF_activities_MSI_vs_MSS <span class="ot">&lt;-</span> TF_activities_MSI_vs_MSS[TF_activities_MSI_vs_MSS<span class="sc">$</span>statistic <span class="sc">==</span> <span class="st">"norm_wmean"</span>,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>)] <span class="sc">%&gt;%</span> <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> <span class="fu">column_to_rownames</span>(<span class="at">var=</span><span class="st">"source"</span>)</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="co"># optional below for just saving the activities:</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>out.TF_activities_MSI_vs_MSS <span class="ot">&lt;-</span> TF_activities_MSI_vs_MSS <span class="sc">%&gt;%</span> </span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames_to_column</span>(<span class="at">var=</span><span class="st">"Dorothea_TF"</span>)</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="co"># write_tsv(out.TF_activities_MSI_vs_MSS, file="TFact.Dorothea.CPTAC.Colon.MSI_vs_MSS.tsv")</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_top_features</span>(TF_activities_MSI_vs_MSS, <span class="at">n_top =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">'TF top10 activities MSI_vs_MSS'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_GE_files/figure-html/unnamed-chunk-4-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="create-sub-parts-for-supplementary-figure-3" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="create-sub-parts-for-supplementary-figure-3"><span class="header-section-number">1.3</span> Create <em>sub-parts</em> for Supplementary Figure 3</h2>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>norm.matrix <span class="ot">&lt;-</span> cptac.colon.exp.dat <span class="sc">%&gt;%</span> <span class="fu">column_to_rownames</span>(<span class="st">"Gene_Symbol"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>scaled_mat <span class="ot">=</span> <span class="fu">t</span>(<span class="fu">scale</span>(<span class="fu">t</span>(norm.matrix)))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>CNAs_dat <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"Data"</span>,<span class="st">"data_CNA.txt"</span>))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>clin_cptac_sel <span class="ot">&lt;-</span> final.updated.clin.mut.dat <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(Tumor_Sample_Barcode, <span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>, Mut_Condition, Sex, <span class="st">`</span><span class="at">Integrated Phenotype</span><span class="st">`</span>, <span class="st">`</span><span class="at">Tumor Site</span><span class="st">`</span>) </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>msi_format <span class="ot">&lt;-</span> clin_cptac_sel<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>msi_format_2 <span class="ot">&lt;-</span> <span class="fu">recode</span>(msi_format, <span class="st">"MSI-H"</span><span class="ot">=</span><span class="st">"MSI"</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>clin_cptac_sel<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span> <span class="ot">&lt;-</span> msi_format_2</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># just make a combo heatmap of combining both omic layers for GNAS</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>dd <span class="ot">&lt;-</span> norm.matrix <span class="sc">%&gt;%</span> <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> <span class="fu">rownames_to_column</span>(<span class="at">var=</span><span class="st">"Gene_Symbol"</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>dd2 <span class="ot">&lt;-</span> dd <span class="sc">%&gt;%</span> <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>Gene_Symbol, <span class="at">names_to =</span> <span class="st">"Sample_ID"</span>, </span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="at">values_to =</span> <span class="st">"Norm_Exp"</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>xx <span class="ot">&lt;-</span> <span class="fu">left_join</span>(<span class="at">x=</span>clin_cptac_sel, <span class="at">y=</span>dd2,<span class="at">by=</span><span class="fu">c</span>(<span class="st">"Tumor_Sample_Barcode"</span><span class="ot">=</span><span class="st">"Sample_ID"</span>))</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>xx2 <span class="ot">&lt;-</span> xx <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Gene_Symbol<span class="sc">==</span><span class="st">"GNAS"</span>)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>xx2 <span class="ot">&lt;-</span> <span class="fu">droplevels</span>(xx2)</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(xx2, <span class="fu">aes</span>(<span class="at">x=</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>, <span class="at">y=</span>Norm_Exp, <span class="at">fill=</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>)) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>Gene_Symbol,<span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span> <span class="fu">geom_violin</span>(<span class="at">trim=</span><span class="cn">FALSE</span>)  <span class="sc">+</span> <span class="fu">geom_boxplot</span>(<span class="at">width=</span><span class="fl">0.1</span>) <span class="sc">+</span> <span class="fu">geom_jitter</span>(<span class="at">shape=</span><span class="dv">16</span>, <span class="at">position=</span><span class="fu">position_jitter</span>(<span class="fl">0.2</span>)) <span class="sc">+</span> ggpubr<span class="sc">::</span><span class="fu">stat_compare_means</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"Violin plot of GNAS normalized expression values in the CPTAC cohort"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Normalized Expresion (Log2)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_GE_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>tot.samples <span class="ot">&lt;-</span> <span class="fu">as.character</span>(clin_cptac_sel<span class="sc">$</span>Tumor_Sample_Barcode)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>CNAs_sel_dat <span class="ot">&lt;-</span> CNAs_dat <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>Entrez_Gene_Id) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">distinct</span>(Hugo_Symbol,<span class="at">.keep_all=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> <span class="fu">column_to_rownames</span>(<span class="st">"Hugo_Symbol"</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(tot.samples)) <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>pdat_sel <span class="ot">&lt;-</span> clin_cptac_sel[<span class="fu">order</span>(clin_cptac_sel<span class="sc">$</span><span class="st">`</span><span class="at">MSI Status</span><span class="st">`</span>),] <span class="sc">%&gt;%</span> <span class="fu">column_to_rownames</span>(<span class="st">"Tumor_Sample_Barcode"</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>ha_add <span class="ot">=</span> <span class="fu">HeatmapAnnotation</span>(</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">MSI_status =</span> pdat_sel[[<span class="dv">1</span>]],</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">border =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="fu">list</span>(<span class="at">MSI_status =</span> <span class="fu">structure</span>(<span class="at">names =</span> <span class="fu">c</span>(<span class="st">"MSI"</span>,<span class="st">"MSS"</span>), <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"black"</span>)))) </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>sel.cna.names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"GNAS"</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>mat_cnv_order<span class="ot">=</span> CNAs_sel_dat[sel.cna.names,<span class="fu">rownames</span>(pdat_sel)]</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co"># if using only the GNAS gene</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>mat_cnv_order <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">t</span>(CNAs_sel_dat[sel.cna.names,<span class="fu">rownames</span>(pdat_sel)]))</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(mat_cnv_order) <span class="ot">&lt;-</span> <span class="st">"GNAS"</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>rna_scaled_order <span class="ot">=</span> <span class="fu">as.matrix</span>(<span class="fu">t</span>(scaled_mat[sel.cna.names, <span class="fu">rownames</span>(pdat_sel)]))</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(rna_scaled_order) <span class="ot">&lt;-</span> <span class="st">"GNAS"</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>f1 <span class="ot">&lt;-</span> <span class="fu">colorRamp2</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"#EEEEEE"</span>, <span class="st">"red"</span>),<span class="at">space=</span><span class="st">"sRGB"</span>)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>col_fun_1 <span class="ot">=</span> <span class="fu">colorRamp2</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="st">"#377EB8"</span>, <span class="st">"white"</span>, <span class="st">"#E41A1C"</span>))</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>ht1 <span class="ot">=</span> <span class="fu">Heatmap</span>(mat_cnv_order, <span class="at">cluster_columns =</span> <span class="cn">FALSE</span>, <span class="at">name=</span> <span class="st">"CNA_GISTIC2_values"</span>, <span class="at">row_title =</span> <span class="st">"CNA"</span>, <span class="at">top_annotation =</span> ha_add,</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="at">show_column_names =</span> <span class="cn">FALSE</span>,<span class="at">col=</span>f1,<span class="at">row_names_gp =</span> <span class="fu">gpar</span>(<span class="at">fontsize =</span> <span class="dv">9</span>),<span class="at">heatmap_legend_param =</span> <span class="fu">list</span>(<span class="at">color_bar =</span> <span class="st">"discrete"</span>),<span class="at">show_row_dend =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>ht2 <span class="ot">=</span> <span class="fu">Heatmap</span>(rna_scaled_order, <span class="at">name=</span><span class="st">"Scaled_gene_expression"</span>,<span class="at">cluster_columns =</span> <span class="cn">FALSE</span>, <span class="at">show_column_names =</span> <span class="cn">FALSE</span>,<span class="at">col=</span>col_fun_1,<span class="at">row_names_gp =</span> <span class="fu">gpar</span>(<span class="at">fontsize =</span> <span class="dv">9</span>),<span class="at">row_title =</span> <span class="st">"RNASeq"</span>,<span class="at">show_row_dend =</span> <span class="cn">FALSE</span>) </span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>ht_list <span class="ot">=</span> ht1 <span class="sc">%v%</span> ht2</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>ht_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="CPTAC_GE_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+<p>Session Information</p>
+</button>
+<div id="collapseOne" class="accordion-collapse collapse">
+<div>
+<div class="cell">
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>- Session info ---------------------------------------------------------------
+ setting  value
+ version  R version 4.1.0 (2021-05-18)
+ os       Windows 10 x64 (build 19045)
+ system   x86_64, mingw32
+ ui       RTerm
+ language (EN)
+ collate  English_United States.1252
+ ctype    English_United States.1252
+ tz       Europe/Berlin
+ date     2024-04-21
+ pandoc   3.1.1 @ C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools/ (via rmarkdown)
+
+- Packages -------------------------------------------------------------------
+ package        * version date (UTC) lib source
+ abind            1.4-5   2016-07-21 [1] CRAN (R 4.1.0)
+ backports        1.4.1   2021-12-13 [1] CRAN (R 4.1.2)
+ bcellViper       1.30.0  2021-10-30 [1] Bioconductor
+ BiocGenerics     0.40.0  2021-10-26 [1] Bioconductor
+ bit              4.0.5   2022-11-15 [1] CRAN (R 4.1.3)
+ bit64            4.0.5   2020-08-30 [1] CRAN (R 4.1.0)
+ broom            1.0.5   2023-06-09 [1] CRAN (R 4.1.0)
+ cachem           1.0.6   2021-08-19 [1] CRAN (R 4.1.1)
+ car              3.1-2   2023-03-30 [1] CRAN (R 4.1.3)
+ carData          3.0-5   2022-01-06 [1] CRAN (R 4.1.2)
+ circlize       * 0.4.15  2022-05-10 [1] CRAN (R 4.1.3)
+ cli              3.4.1   2022-09-23 [1] CRAN (R 4.1.3)
+ clue             0.3-64  2023-01-31 [1] CRAN (R 4.1.3)
+ cluster          2.1.4   2022-08-22 [1] CRAN (R 4.1.3)
+ codetools        0.2-19  2023-02-01 [1] CRAN (R 4.1.3)
+ colorspace       2.1-0   2023-01-23 [1] CRAN (R 4.1.3)
+ ComplexHeatmap * 2.10.0  2021-10-26 [1] Bioconductor
+ crayon           1.5.2   2022-09-29 [1] CRAN (R 4.1.3)
+ data.table     * 1.14.8  2023-02-17 [1] CRAN (R 4.1.3)
+ decoupleR      * 2.1.6   2022-02-16 [1] Github (saezlab/decoupleR@e74bdfa)
+ digest           0.6.29  2021-12-01 [1] CRAN (R 4.1.3)
+ doParallel       1.0.17  2022-02-07 [1] CRAN (R 4.1.2)
+ dorothea       * 1.6.0   2021-10-30 [1] Bioconductor
+ downlit        * 0.4.3   2023-06-29 [1] CRAN (R 4.1.0)
+ dplyr          * 1.1.2   2023-04-20 [1] CRAN (R 4.1.3)
+ evaluate         0.22    2023-09-29 [1] CRAN (R 4.1.0)
+ fansi            1.0.4   2023-01-22 [1] CRAN (R 4.1.3)
+ farver           2.1.1   2022-07-06 [1] CRAN (R 4.1.3)
+ fastmap          1.1.0   2021-01-25 [1] CRAN (R 4.1.0)
+ forcats        * 1.0.0   2023-01-29 [1] CRAN (R 4.1.3)
+ foreach          1.5.2   2022-02-02 [1] CRAN (R 4.1.2)
+ generics         0.1.3   2022-07-05 [1] CRAN (R 4.1.3)
+ GetoptLong       1.0.5   2020-12-15 [1] CRAN (R 4.1.0)
+ ggplot2        * 3.4.3   2023-08-14 [1] CRAN (R 4.1.0)
+ ggpubr           0.6.0   2023-02-10 [1] CRAN (R 4.1.3)
+ ggrepel          0.9.3   2023-02-03 [1] CRAN (R 4.1.3)
+ ggsignif         0.6.4   2022-10-13 [1] CRAN (R 4.1.0)
+ GlobalOptions    0.1.2   2020-06-10 [1] CRAN (R 4.1.0)
+ glue             1.6.2   2022-02-24 [1] CRAN (R 4.1.3)
+ gridExtra        2.3     2017-09-09 [1] CRAN (R 4.1.0)
+ gtable           0.3.4   2023-08-21 [1] CRAN (R 4.1.0)
+ here           * 1.0.1   2020-12-13 [1] CRAN (R 4.1.3)
+ hms              1.1.3   2023-03-21 [1] CRAN (R 4.1.3)
+ htmltools        0.5.4   2022-12-07 [1] CRAN (R 4.1.3)
+ htmlwidgets      1.6.2   2023-03-17 [1] CRAN (R 4.1.3)
+ IRanges          2.28.0  2021-10-26 [1] Bioconductor
+ iterators        1.0.14  2022-02-05 [1] CRAN (R 4.1.2)
+ jsonlite         1.8.4   2022-12-06 [1] CRAN (R 4.1.3)
+ knitr            1.44    2023-09-11 [1] CRAN (R 4.1.0)
+ labeling         0.4.3   2023-08-29 [1] CRAN (R 4.1.0)
+ lattice          0.21-8  2023-04-05 [1] CRAN (R 4.1.3)
+ lifecycle        1.0.3   2022-10-07 [1] CRAN (R 4.1.3)
+ limma          * 3.50.3  2022-04-07 [1] Bioconductor
+ lubridate      * 1.9.2   2023-02-10 [1] CRAN (R 4.1.3)
+ magick           2.7.4   2023-03-09 [1] CRAN (R 4.1.3)
+ magrittr         2.0.3   2022-03-30 [1] CRAN (R 4.1.3)
+ Matrix           1.5-4   2023-04-04 [1] CRAN (R 4.1.3)
+ matrixStats      0.63.0  2022-11-18 [1] CRAN (R 4.1.3)
+ memoise          2.0.1   2021-11-26 [1] CRAN (R 4.1.2)
+ munsell          0.5.0   2018-06-12 [1] CRAN (R 4.1.0)
+ pillar           1.9.0   2023-03-22 [1] CRAN (R 4.1.3)
+ pkgconfig        2.0.3   2019-09-22 [1] CRAN (R 4.1.0)
+ plyr             1.8.8   2022-11-11 [1] CRAN (R 4.1.3)
+ png              0.1-8   2022-11-29 [1] CRAN (R 4.1.3)
+ progeny        * 1.16.0  2021-10-26 [1] Bioconductor
+ purrr          * 1.0.1   2023-01-10 [1] CRAN (R 4.1.3)
+ R6               2.5.1   2021-08-19 [1] CRAN (R 4.1.1)
+ RColorBrewer     1.1-3   2022-04-03 [1] CRAN (R 4.1.3)
+ Rcpp             1.0.9   2022-07-08 [1] CRAN (R 4.1.3)
+ readr          * 2.1.4   2023-02-10 [1] CRAN (R 4.1.3)
+ rjson            0.2.21  2022-01-09 [1] CRAN (R 4.1.2)
+ rlang            1.1.1   2023-04-28 [1] CRAN (R 4.1.0)
+ rmarkdown        2.25    2023-09-18 [1] CRAN (R 4.1.0)
+ rprojroot        2.0.3   2022-04-02 [1] CRAN (R 4.1.3)
+ rstatix          0.7.2   2023-02-01 [1] CRAN (R 4.1.3)
+ rstudioapi       0.15.0  2023-07-07 [1] CRAN (R 4.1.0)
+ S4Vectors        0.32.4  2022-04-03 [1] Bioconductor
+ scales           1.2.1   2022-08-20 [1] CRAN (R 4.1.3)
+ sessioninfo      1.2.2   2021-12-06 [1] CRAN (R 4.1.2)
+ shape            1.4.6   2021-05-19 [1] CRAN (R 4.1.0)
+ statmod          1.5.0   2023-01-06 [1] CRAN (R 4.1.3)
+ stringi          1.7.6   2021-11-29 [1] CRAN (R 4.1.2)
+ stringr        * 1.5.0   2022-12-02 [1] CRAN (R 4.1.3)
+ tibble         * 3.2.1   2023-03-20 [1] CRAN (R 4.1.3)
+ tidyr          * 1.3.0   2023-01-24 [1] CRAN (R 4.1.3)
+ tidyselect       1.2.0   2022-10-10 [1] CRAN (R 4.1.0)
+ tidyverse      * 2.0.0   2023-02-22 [1] CRAN (R 4.1.3)
+ timechange       0.2.0   2023-01-11 [1] CRAN (R 4.1.3)
+ tzdb             0.3.0   2022-03-28 [1] CRAN (R 4.1.3)
+ utf8             1.2.3   2023-01-31 [1] CRAN (R 4.1.3)
+ vctrs            0.6.2   2023-04-19 [1] CRAN (R 4.1.0)
+ vroom            1.6.1   2023-01-22 [1] CRAN (R 4.1.3)
+ withr            2.5.1   2023-09-26 [1] CRAN (R 4.1.0)
+ xfun             0.39    2023-04-20 [1] CRAN (R 4.1.3)
+ xml2           * 1.3.3   2021-11-30 [1] CRAN (R 4.1.3)
+ yaml             2.3.7   2023-01-23 [1] CRAN (R 4.1.3)
+
+ [1] C:/Program Files/R/R-4.1.0/library
+
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+&nbsp;
+<hr>
+<p style="text-align: center;">A work by <a href="https://github.com/Jasonmbg/">Efstathios-Iason Vlachavas</a></p>
+<p style="text-align: center;"><span style="color: #808080;"><em>svlachavas@eie.gr</em></span></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://orcid.org/0000-0002-3432-9053" class="fa fa-orcid"></a>
+    <a href="https://www.linkedin.com/in/efstathios-iason-vlachavas-164b6085/" class="fa fa-linkedin"></a>
+    <a href="https://github.com/Jasonmbg/" class="fa fa-github"></a>
+</p>
+
+&nbsp;
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

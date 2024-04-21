@@ -1,0 +1,8 @@
+[2024-04-21 14:03:07] [INFO]    [OmnipathR] Initialized cache: `C:\Users\admin\AppData\Local\Cache\OmnipathR`.
+[2024-04-21 14:03:07] [INFO]    [OmnipathR] Welcome to OmnipathR!
+[2024-04-21 14:03:30] [TRACE]   [OmnipathR] Loaded data from RDS `C:\Users\admin\AppData\Local\Cache\OmnipathR/a6f560033dff45b503a8016c14c974c4c04b5967-1.rds`.
+[2024-04-21 14:03:30] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/enzsub?genesymbols=yes&organisms=9606&fields=sources,references,curation_effort&license=academic`
+[2024-04-21 14:03:30] [SUCCESS] [OmnipathR] Loaded 39042 enzyme-substrate relationships from cache.
+[2024-04-21 14:03:31] [TRACE]   [OmnipathR] Loaded data from RDS `C:\Users\admin\AppData\Local\Cache\OmnipathR/a7b21d9d80a3837a50268df16d168128fc1c6ede-1.rds`.
+[2024-04-21 14:03:31] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=omnipath&organisms=9606&fields=sources,references,curation_effort&license=academic`
+[2024-04-21 14:03:32] [SUCCESS] [OmnipathR] Loaded 37957 interactions from cache.

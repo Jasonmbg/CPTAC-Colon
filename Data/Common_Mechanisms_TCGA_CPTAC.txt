@@ -1,0 +1,12 @@
+Common_Terms	CPTAC_TCGA_Description
+R-HSA-5663202	Diseases of signal transduction by growth factor receptors and second messengers
+R-HSA-201722	Chromatin modifying enzymes
+R-HSA-201681	Chromatin organization
+R-HSA-3247509	Formation of the beta-catenin:TCF transactivating complex
+R-HSA-4839726	Signaling by FLT3 fusion proteins
+R-HSA-9703465	FLT3 signaling in disease
+R-HSA-8939243	TCF dependent signaling in response to WNT
+R-HSA-1839117	Transcriptional regulation by RUNX1
+R-HSA-195721	Signaling by WNT
+R-HSA-9682385	RUNX1 interacts with co-factors whose precise effect on RUNX1 targets is not known
+R-HSA-8878171	Signaling by cytosolic FGFR1 fusion mutants

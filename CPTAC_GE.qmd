@@ -1,0 +1,300 @@
+---
+title: "CPTAC RNASeq Analysis"
+number-sections: true
+include-after-body: "footer.html"
+format: 
+ html:
+  code-fold: true
+  code-summary: "Show the code"
+author: Efstathios-Iason Vlachavas
+date: last-modified
+date-format: YYYY-MM-DD
+toc: true
+theme: "litera"
+editor: visual
+warning: false
+---
+
+# CPTAC-Colon dataset RNASeq analysis overview
+
+### Reproduce the analysis of the rnaseq data from the CPTAC-Colon dataset for the ACCC-CRC manuscript.
+
+Initially start by loading the necessary R packages, along with importing the clinical information.
+
+```{r}
+
+# load the respective packages and initially read the necessary clinical data:
+
+library(tidyverse)
+library(data.table)
+library(limma)
+library(progeny)
+library(dorothea)
+library(decoupleR)
+library(xml2)
+library(downlit)
+library(here)
+library(ComplexHeatmap)
+library(circlize)
+
+dr_here()
+
+clin.dat.cptac <- read_tsv(here("Data", "CPTAC_clinical_start_INFO.tsv"))
+
+final.updated.clin.mut.dat <- clin.dat.cptac %>% 
+filter(!Mut_Condition%in%c("ARAF_mut","GNAS_mut","NRAS_mut"))
+
+# write_tsv(final.updated.clin.mut.dat, "CPTAC_clinical_final_mod_INFO.tsv")
+
+tot.samples <- final.updated.clin.mut.dat$`Sample ID`
+
+```
+
+### Then load-preprocess the rnaseq data
+
+```{r}
+
+load(here("Data","data_RNA_Seq_v2_expression_median.rda"))
+
+rna.seq.dat <- rna.seq.dat %>% 
+dplyr::select(-Entrez_Gene_Id) 
+
+rna.seq.form <- rna.seq.dat %>% 
+  dplyr::distinct(Hugo_Symbol,.keep_all=TRUE) %>% 
+  column_to_rownames("Hugo_Symbol") %>%
+  dplyr::select(all_of(tot.samples))
+
+norm.counts.mat <- as.matrix(rna.seq.form)
+
+tl <- final.updated.clin.mut.dat$`Primary Site`
+
+tl.updated <- recode(tl, "Ascending Colon"="right_sided",
+"Cecum"="right_sided","Descending Colon"="left_sided",
+"Splenic Flexure"="left_sided","Hepatix Flexure"="right_sided",
+"Sigmoid Colon"="left_sided", .default = NA_character_)
+
+final.updated.clin.mut.dat$tumor_location <- tl.updated
+
+plyr::count(final.updated.clin.mut.dat$`MSI Status`) # here-MSI-H:14
+MSI.cond <- as.factor(final.updated.clin.mut.dat$`MSI Status`)
+
+y <- normalizeQuantiles(norm.counts.mat)
+keep <- rowSums(y > log2(11)) >= 14 # the lowest N of samples attributed to the MSI-H group
+y2 <- y[keep,] 
+
+cptac.colon.exp.dat <- y2 %>% as.data.frame() %>% rownames_to_column("Gene_Symbol")
+# write_tsv(cptac.colon.exp.dat, "CPTAC.Colon.Norm.Filt.Exp.ACCCPaper.MSI.tsv")
+
+# or here: save(cptac.colon.exp.dat, file="CPTAC.Colon.Norm.Filt.Exp.ACCCPaper.MSI.rda")
+
+final.exp.gene.vector.cptac <- as.character(rownames(y2))
+exp.dt.accc.rnaseq.cptac <- final.exp.gene.vector.cptac %>% as_tibble() %>% 
+rename(ExpressedGenes.CPTAC.CRC.SelSamples.RNAseq=value)
+
+# write_tsv(exp.dt.accc.rnaseq.cptac,"ExpressedGenes.CPTAC.RNAseq.ACCC.Paper.MSI.tsv")
+
+plotMDS(y2, labels=MSI.cond, col=as.numeric(MSI.cond))
+
+```
+
+## Proceed with DE analysis comparing MSI vs MSS patients
+
+```{r}
+
+msi_char_vec <- final.updated.clin.mut.dat$`MSI Status`
+
+msi_char_upd <- recode(msi_char_vec, MSS = "MSS", `MSI-H`="MSI", .default = NA_character_)
+
+final.updated.clin.mut.dat$`MSI Status` <- msi_char_upd
+
+msi_cond <- as.factor(final.updated.clin.mut.dat$`MSI Status`)
+
+# construct design matrix
+design <- model.matrix(~0 +msi_cond) 
+
+colnames(design) <- gsub("msi_cond", "", colnames(design))
+
+fit <- lmFit(y2,design)
+
+cm <- makeContrasts(Comp1= MSI-MSS,
+levels = colnames(coef(fit)))
+                    
+fit2 <- contrasts.fit(fit, cm)
+fit3 <- eBayes(fit2, trend=TRUE,robust = TRUE)
+
+comp1_stat <- limma::topTable(fit3, coef=1, number=nrow(fit3), adjust.method="fdr", sort.by="none") %>% dplyr::select(t) %>% dplyr::rename(MSI_HvsMSS_stat=t)
+
+total.stat.dat <- comp1_stat %>% as.matrix()
+
+```
+
+## Perform relative Pathway/TF-activity analyses
+
+```{r}
+
+PathwayActivity_zscore <- progeny(total.stat.dat, 
+scale=TRUE, organism="Human", top = 100, perm = 10000, z_scores = TRUE) %>%
+t()
+
+colnames(PathwayActivity_zscore) <- "NES_MSI_vs_MSS"
+
+PathwayActivity_zscore_df <- as.data.frame(PathwayActivity_zscore) %>% 
+  rownames_to_column(var = "Pathway") %>%
+  dplyr::arrange(NES_MSI_vs_MSS) %>%
+  dplyr::mutate(Pathway = factor(Pathway))
+
+
+ggplot(PathwayActivity_zscore_df,aes(x = reorder(Pathway, NES_MSI_vs_MSS), 
+                                     y = NES_MSI_vs_MSS)) + 
+  geom_bar(aes(fill = NES_MSI_vs_MSS), stat = "identity") +
+  scale_fill_gradient2(low = "darkblue", high = "indianred", 
+                       mid = "whitesmoke", midpoint = 0) + 
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+          element_text(angle = 45, hjust = 1, size =10, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+  xlab("Pathways")
+
+Path.act.dat.cptac.NES_MSI_vs_MSS <- as.data.frame(PathwayActivity_zscore)
+Path.act.dat.cptac.NES_MSI_vs_MSS <- Path.act.dat.cptac.NES_MSI_vs_MSS %>% rownames_to_column() %>% dplyr::rename(PROGENY_pathways=rowname)
+
+# write_tsv(Path.act.dat.cptac.MSI_vs_MSS, file="PathwayActivity_zscore.PROGENY.CPTAC.COAD.Pathways.MSI_vs_MSS.tsv")
+
+# Continue with TF activity analysis estimation
+
+# First we import the dorothea regulons (using only confidence A, B, and C), see dorothea publication for information on confidence levels
+
+# https://github.com/saezlab/kinase_tf_mini_tuto/blob/main/code/utils.R
+ 
+plot_top_features <- function(data, n_top) {
+
+  colnames(data) <- "value"
+
+  arranged <- data %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "id") %>%
+    arrange(desc(value))
+
+  top_up <- slice_head(arranged, n = n_top)
+  top_down <- slice_tail(arranged, n = n_top)
+
+  p <- bind_rows(list(up = top_up, down = top_down), .id = "status") %>%
+    mutate(id = fct_inorder(id)) %>%
+    ggplot(aes(x = value, y = id, fill = status)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c("up" = "red", "down" = "blue")) +
+    theme_bw()
+
+  return(p)
+
+}
+                                  
+dorothea_df <- as.data.frame(dorothea_hs[dorothea_hs$confidence %in% 
+c("A","B","C"),c(3,1,4)])
+dorothea_df$likelihood <- 1
+
+dorothea_df <- intersect_regulons(as.matrix(comp1_stat), dorothea_df, .source = tf, .target = target, minsize=20)
+
+TF_activities_MSI_vs_MSS <- as.data.frame(run_wmean(mat = as.matrix(comp1_stat), network = dorothea_df, .source = "tf", .target = "target", times = 1000))
+
+# for further saving with all relevant information:
+dat.TF_activities_MSI_vs_MSS <- TF_activities_MSI_vs_MSS %>% filter(statistic=="norm_wmean") %>% select(statistic,source,score,p_value)
+
+# write_tsv(dat.TF_activities_MSI_vs_MSS, file="CPTAC.Colon.TFact.MSI_vs_MSS.RES.TotalTable.tsv")
+
+TF_activities_MSI_vs_MSS <- TF_activities_MSI_vs_MSS[TF_activities_MSI_vs_MSS$statistic == "norm_wmean",c(2,4)] %>% as_tibble() %>% column_to_rownames(var="source")
+
+# optional below for just saving the activities:
+out.TF_activities_MSI_vs_MSS <- TF_activities_MSI_vs_MSS %>% 
+rownames_to_column(var="Dorothea_TF")
+# write_tsv(out.TF_activities_MSI_vs_MSS, file="TFact.Dorothea.CPTAC.Colon.MSI_vs_MSS.tsv")
+
+plot_top_features(TF_activities_MSI_vs_MSS, n_top = 10) +
+  ggtitle('TF top10 activities MSI_vs_MSS')
+
+```
+
+## Create *sub-parts* for Supplementary Figure 3
+
+```{r}
+
+norm.matrix <- cptac.colon.exp.dat %>% column_to_rownames("Gene_Symbol") %>% as.matrix()
+
+scaled_mat = t(scale(t(norm.matrix)))
+
+CNAs_dat <- read_tsv(here("Data","data_CNA.txt"))
+
+clin_cptac_sel <- final.updated.clin.mut.dat %>% dplyr::select(Tumor_Sample_Barcode, `MSI Status`, Mut_Condition, Sex, `Integrated Phenotype`, `Tumor Site`) 
+
+msi_format <- clin_cptac_sel$`MSI Status`
+msi_format_2 <- recode(msi_format, "MSI-H"="MSI")
+
+clin_cptac_sel$`MSI Status` <- msi_format_2
+
+# just make a combo heatmap of combining both omic layers for GNAS
+
+dd <- norm.matrix %>% as.data.frame() %>% rownames_to_column(var="Gene_Symbol")
+dd2 <- dd %>% pivot_longer(cols = -Gene_Symbol, names_to = "Sample_ID", 
+values_to = "Norm_Exp")
+xx <- left_join(x=clin_cptac_sel, y=dd2,by=c("Tumor_Sample_Barcode"="Sample_ID"))
+xx2 <- xx %>% filter(Gene_Symbol=="GNAS")
+xx2 <- droplevels(xx2)
+
+ggplot(xx2, aes(x=`MSI Status`, y=Norm_Exp, fill=`MSI Status`)) + facet_wrap(~Gene_Symbol,scales = "free_y") + geom_violin(trim=FALSE)  + geom_boxplot(width=0.1) + geom_jitter(shape=16, position=position_jitter(0.2)) + ggpubr::stat_compare_means() + ggtitle("Violin plot of GNAS normalized expression values in the CPTAC cohort") + ylab("Normalized Expresion (Log2)")
+
+tot.samples <- as.character(clin_cptac_sel$Tumor_Sample_Barcode)
+
+CNAs_sel_dat <- CNAs_dat %>% dplyr::select(-Entrez_Gene_Id) %>% dplyr::distinct(Hugo_Symbol,.keep_all=TRUE) %>% column_to_rownames("Hugo_Symbol") %>% dplyr::select(all_of(tot.samples)) %>% as.matrix()
+
+pdat_sel <- clin_cptac_sel[order(clin_cptac_sel$`MSI Status`),] %>% column_to_rownames("Tumor_Sample_Barcode")
+
+ha_add = HeatmapAnnotation(
+    MSI_status = pdat_sel[[1]],
+    border = TRUE,
+    col = list(MSI_status = structure(names = c("MSI","MSS"), c("red","black")))) 
+
+sel.cna.names <- c("GNAS")
+
+mat_cnv_order= CNAs_sel_dat[sel.cna.names,rownames(pdat_sel)]
+
+# if using only the GNAS gene
+
+mat_cnv_order <- as.matrix(t(CNAs_sel_dat[sel.cna.names,rownames(pdat_sel)]))
+rownames(mat_cnv_order) <- "GNAS"
+
+rna_scaled_order = as.matrix(t(scaled_mat[sel.cna.names, rownames(pdat_sel)]))
+rownames(rna_scaled_order) <- "GNAS"
+
+f1 <- colorRamp2(c(-2, 0, 2), c("blue", "#EEEEEE", "red"),space="sRGB")
+
+col_fun_1 = colorRamp2(c(-2, 0, 2), c("#377EB8", "white", "#E41A1C"))
+
+ht1 = Heatmap(mat_cnv_order, cluster_columns = FALSE, name= "CNA_GISTIC2_values", row_title = "CNA", top_annotation = ha_add,
+show_column_names = FALSE,col=f1,row_names_gp = gpar(fontsize = 9),heatmap_legend_param = list(color_bar = "discrete"),show_row_dend = FALSE)
+
+ht2 = Heatmap(rna_scaled_order, name="Scaled_gene_expression",cluster_columns = FALSE, show_column_names = FALSE,col=col_fun_1,row_names_gp = gpar(fontsize = 9),row_title = "RNASeq",show_row_dend = FALSE) 
+
+ht_list = ht1 %v% ht2
+
+ht_list
+
+```
+
+<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+
+Session Information
+
+</button>
+
+::: {#collapseOne .accordion-collapse .collapse}
+<div>
+
+```{r}
+sessioninfo::session_info()
+```
+
+</div>
+:::
